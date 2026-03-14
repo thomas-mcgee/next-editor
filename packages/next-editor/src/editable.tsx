@@ -47,14 +47,14 @@ function RegionChrome({
         position: "relative",
         borderRadius: 12,
         outline: isEditing
-          ? `1px solid ${
+          ? `${active ? 3 : 1}px solid ${
               active
-                ? "var(--foreground, #18181b)"
+                ? "#ec4899"
                 : "var(--border-strong, #d4d4d8)"
             }`
           : "none",
         outlineOffset: isEditing ? 4 : 0,
-        transition: "outline-color 160ms ease",
+        transition: "outline-color 160ms ease, outline-width 160ms ease",
       }}
     >
       {isEditing ? (
@@ -72,6 +72,8 @@ function RegionChrome({
             padding: "4px 12px",
             fontSize: 12,
             fontWeight: 600,
+            fontFamily:
+              'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
             color: "var(--foreground, #18181b)",
             boxShadow: "var(--shadow-soft, 0 8px 20px rgba(24,24,27,0.12))",
             cursor: "pointer",
