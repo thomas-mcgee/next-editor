@@ -1,0 +1,86 @@
+{
+  "home": {
+    "pageId": "home",
+    "values": {
+      "hero": {
+        "eyebrow": "Inline editing for custom client sites",
+        "heading": "Fast Next.js websites with a focused editing layer.",
+        "subheading": "NextEditor keeps the site hand-built in code while exposing a small, deliberate set of editable fields for clients.",
+        "image": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
+        "theme": "linen"
+      },
+      "cta": {
+        "heading": "Ship changes without a page builder.",
+        "buttonText": "Book a planning call",
+        "buttonUrl": "/about",
+        "enabled": true
+      },
+      "seo": {
+        "title": "NextEditor Demo Home",
+        "description": "A minimal inline editing system for custom-built Next.js client websites.",
+        "canonicalUrl": "https://demo.local/",
+        "slug": "/",
+        "robotsIndex": true,
+        "robotsFollow": true,
+        "openGraph": {
+          "title": "NextEditor Demo Home",
+          "description": "See the inline editor, floating admin bar, and left-hand customizer sidebar in action.",
+          "image": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
+          "imageAlt": "Designers reviewing a website layout",
+          "url": "https://demo.local/",
+          "type": "website",
+          "siteName": "NextEditor Demo"
+        },
+        "twitter": {
+          "title": "NextEditor Demo Home",
+          "description": "Minimal editing controls for custom Next.js sites.",
+          "image": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
+          "imageAlt": "Designers reviewing a website layout",
+          "card": "summary_large_image"
+        }
+      }
+    },
+    "updatedAt": "2026-03-13T18:00:00.000Z",
+    "updatedBy": "seed"
+  },
+  "about": {
+    "pageId": "about",
+    "values": {
+      "intro": {
+        "heading": "A practical editing workflow for custom sites.",
+        "body": "The public site stays lean, the editable fields stay explicit, and page structure remains in code where it belongs."
+      },
+      "team": {
+        "heading": "Built for internal client delivery",
+        "body": "Editors change a handful of fields from the live site. Admin users still manage accounts and posts separately.",
+        "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80"
+      },
+      "seo": {
+        "title": "NextEditor Demo About",
+        "description": "About page for the NextEditor demo workspace.",
+        "canonicalUrl": "https://demo.local/about",
+        "slug": "/about",
+        "robotsIndex": true,
+        "robotsFollow": true,
+        "openGraph": {
+          "title": "NextEditor Demo About",
+          "description": "Learn how the demo site is structured.",
+          "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+          "imageAlt": "Team planning in front of screens",
+          "url": "https://demo.local/about",
+          "type": "website",
+          "siteName": "NextEditor Demo"
+        },
+        "twitter": {
+          "title": "NextEditor Demo About",
+          "description": "About page for the NextEditor demo workspace.",
+          "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+          "imageAlt": "Team planning in front of screens",
+          "card": "summary_large_image"
+        }
+      }
+    },
+    "updatedAt": "2026-03-13T18:00:00.000Z",
+    "updatedBy": "seed"
+  }
+}

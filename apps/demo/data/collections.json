@@ -1,0 +1,26 @@
+{
+  "posts": [
+    {
+      "id": "post_1",
+      "type": "posts",
+      "title": "Why explicit field mapping beats page builders for client sites",
+      "slug": "explicit-field-mapping-beats-page-builders",
+      "status": "published",
+      "excerpt": "A practical look at why custom-coded sites benefit from narrow editing controls instead of layout builders.",
+      "updatedAt": "2026-03-13T18:00:00.000Z",
+      "updatedBy": "seed",
+      "publishedAt": "2026-03-10T16:00:00.000Z"
+    },
+    {
+      "id": "post_2",
+      "type": "posts",
+      "title": "Small admin systems for internal client delivery",
+      "slug": "small-admin-systems-for-internal-client-delivery",
+      "status": "draft",
+      "excerpt": "A starter draft describing how to keep user management and page editing separate.",
+      "updatedAt": "2026-03-13T18:00:00.000Z",
+      "updatedBy": "seed",
+      "publishedAt": null
+    }
+  ]
+}
