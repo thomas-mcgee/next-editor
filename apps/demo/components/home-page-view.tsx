@@ -45,7 +45,7 @@ export function HomePageView() {
       </section>
 
       {showCta ? (
-        <section className="mt-8 rounded-[36px] border border-zinc-200 bg-[var(--surface)] p-10 shadow-[0_12px_40px_rgba(24,24,27,0.08)]">
+        <section className="mt-8 rounded-[36px] border border-zinc-200 bg-[#fffdf8] p-10 shadow-[0_12px_40px_rgba(24,24,27,0.08)]">
           <EditableText
             fieldId="cta.heading"
             as="h2"

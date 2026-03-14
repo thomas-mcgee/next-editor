@@ -66,6 +66,11 @@ export type EditorProviderProps = {
   children: ReactNode;
 };
 
+export type EditorViewportProps = {
+  children: ReactNode;
+  sidebarWidth?: number;
+};
+
 export type EditableTextProps = {
   fieldId: string;
   value?: string | null;

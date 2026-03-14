@@ -13,12 +13,38 @@ export default async function AdminUsersPage() {
 
   return (
     <section className="font-sans">
-      <h2
-        className="text-3xl font-semibold"
-        style={{ color: "var(--foreground)" }}
-      >
-        Users
-      </h2>
+      <div className="flex items-start justify-between gap-6">
+        <div className="flex items-center gap-3">
+          <h2
+            className="text-3xl font-semibold"
+            style={{ color: "var(--foreground)" }}
+          >
+            Users
+          </h2>
+          <span
+            className="rounded-full px-3 py-1 text-xs font-medium"
+            style={{
+              border: "1px solid var(--border-strong)",
+              color: "var(--muted)",
+              background: "var(--surface)",
+            }}
+          >
+            {users.length}
+          </span>
+        </div>
+        <a
+          href="/admin/users/new"
+          className="rounded-xl px-4 py-2 text-sm font-semibold"
+          style={{
+            border: "1px solid var(--border-strong)",
+            color: "var(--foreground)",
+            background: "var(--surface)",
+            textDecoration: "none",
+          }}
+        >
+          Add User
+        </a>
+      </div>
       <p className="mt-3 max-w-2xl text-sm leading-6" style={{ color: "var(--muted)" }}>
         This page is only available to admin users. Editors can access the rest
         of the admin but not user management.
@@ -26,9 +52,15 @@ export default async function AdminUsersPage() {
 
       <div
         className="mt-6 overflow-hidden rounded-xl"
-        style={{ border: "1px solid var(--border-strong)" }}
+        style={{
+          border: "1px solid var(--border-strong)",
+          background: "var(--surface)",
+        }}
       >
-        <table className="min-w-full divide-y divide-zinc-200 text-left text-sm">
+        <table
+          className="min-w-full text-left text-sm"
+          style={{ background: "var(--surface)" }}
+        >
           <thead style={{ background: "var(--surface-muted)" }}>
             <tr>
               <th className="px-4 py-3 font-medium" style={{ color: "var(--muted)" }}>
@@ -45,9 +77,12 @@ export default async function AdminUsersPage() {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-200">
+          <tbody>
             {users.map((user) => (
-              <tr key={user.id}>
+              <tr
+                key={user.id}
+                style={{ borderTop: "1px solid var(--border-strong)" }}
+              >
                 <td className="px-4 py-3 font-medium" style={{ color: "var(--foreground)" }}>
                   {user.name}
                 </td>

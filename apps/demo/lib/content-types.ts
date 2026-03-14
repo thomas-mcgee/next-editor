@@ -1,4 +1,10 @@
-export type ContentFieldType = "text" | "textarea" | "slug" | "status" | "date";
+export type ContentFieldType =
+  | "text"
+  | "textarea"
+  | "slug"
+  | "status"
+  | "date"
+  | "richtext";
 
 export type ContentTypeField = {
   id: string;
@@ -19,7 +25,7 @@ export type ContentEntry = {
   type: string;
   title: string;
   slug: string;
-  status: "draft" | "published";
+  status: "draft" | "scheduled" | "published";
   excerpt?: string;
   updatedAt: string;
   updatedBy: string;
@@ -38,8 +44,9 @@ export const contentTypeRegistry = {
       { id: "title", label: "Title", type: "text" },
       { id: "slug", label: "Slug", type: "slug" },
       { id: "excerpt", label: "Excerpt", type: "textarea" },
+      { id: "body", label: "Body", type: "richtext" },
       { id: "status", label: "Status", type: "status" },
-      { id: "publishedAt", label: "Publish Date", type: "date" },
+      { id: "publishedAt", label: "Publish Date & Time", type: "date" },
     ],
   },
 } satisfies Record<string, ContentTypeDefinition>;

@@ -3,6 +3,7 @@
 import {
   EditorProvider,
   EditorSidebar,
+  EditorViewport,
   FloatingAdminBar,
   type EditorPageValues,
   type PageDefinition,
@@ -32,7 +33,9 @@ export function DemoEditorShell({
     >
       {canEdit ? <EditorSidebar /> : null}
       {canEdit ? <FloatingAdminBar /> : null}
-      {children}
+      <EditorViewport>
+        <div className="site-theme-scope">{children}</div>
+      </EditorViewport>
     </EditorProvider>
   );
 }

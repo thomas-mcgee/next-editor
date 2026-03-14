@@ -16,9 +16,15 @@ export default async function AdminPagesPage() {
       </p>
       <div
         className="mt-6 overflow-hidden rounded-xl"
-        style={{ border: "1px solid var(--border-strong)" }}
+        style={{
+          border: "1px solid var(--border-strong)",
+          background: "var(--surface)",
+        }}
       >
-        <table className="min-w-full divide-y divide-zinc-200 text-left text-sm">
+        <table
+          className="min-w-full text-left text-sm"
+          style={{ background: "var(--surface)" }}
+        >
           <thead style={{ background: "var(--surface-muted)" }}>
             <tr>
               <th className="px-4 py-3 font-medium" style={{ color: "var(--muted)" }}>
@@ -32,9 +38,12 @@ export default async function AdminPagesPage() {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-200">
+          <tbody>
             {pages.map((page) => (
-              <tr key={page.pageId}>
+              <tr
+                key={page.pageId}
+                style={{ borderTop: "1px solid var(--border-strong)" }}
+              >
                 <td className="px-4 py-3 font-medium" style={{ color: "var(--foreground)" }}>
                   {page.pageId}
                 </td>

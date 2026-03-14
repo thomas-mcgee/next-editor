@@ -1,9 +1,9 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useEditor } from "./editor-context";
 import type { FieldDefinition } from "./types";
-import { cx } from "./utils";
 
 function FieldControl({ field }: { field: FieldDefinition }) {
   const { activeFieldId, getFieldValue, registerFieldRef, setFieldValue } =
@@ -21,9 +21,13 @@ function FieldControl({ field }: { field: FieldDefinition }) {
     <div
       ref={ref}
       style={{
-        borderRadius: 18,
-        border: `1px solid ${active ? "#18181b" : "#e4e4e7"}`,
-        background: active ? "#fafafa" : "#ffffff",
+        borderRadius: 12,
+        border: `1px solid ${
+          active ? "var(--foreground, #18181b)" : "var(--border-strong, #e4e4e7)"
+        }`,
+        background: active
+          ? "var(--surface-elevated, #fafafa)"
+          : "var(--surface, #ffffff)",
         padding: 16,
         transition: "border-color 160ms ease, background 160ms ease",
       }}
@@ -43,7 +47,7 @@ function FieldControl({ field }: { field: FieldDefinition }) {
               display: "block",
               fontSize: 14,
               fontWeight: 600,
-              color: "#18181b",
+              color: "var(--foreground, #18181b)",
             }}
           >
             {field.label}
@@ -54,7 +58,7 @@ function FieldControl({ field }: { field: FieldDefinition }) {
                 marginTop: 4,
                 fontSize: 12,
                 lineHeight: 1.6,
-                color: "#71717a",
+                color: "var(--muted, #71717a)",
               }}
             >
               {field.description}
@@ -64,12 +68,10 @@ function FieldControl({ field }: { field: FieldDefinition }) {
         <span
           style={{
             fontSize: 11,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: "#a1a1aa",
+            color: "var(--muted, #a1a1aa)",
           }}
         >
-          {field.type}
+          {formatFieldType(field.type)}
         </span>
       </div>
 
@@ -96,12 +98,16 @@ function FieldControl({ field }: { field: FieldDefinition }) {
           onClick={() => setFieldValue(field.id, !Boolean(currentValue))}
           style={{
             border: 0,
-            borderRadius: 999,
+            borderRadius: 10,
             padding: "10px 14px",
             fontSize: 14,
             fontWeight: 500,
-            background: currentValue ? "#18181b" : "#f4f4f5",
-            color: currentValue ? "#ffffff" : "#3f3f46",
+            background: currentValue
+              ? "var(--foreground, #18181b)"
+              : "var(--surface-muted, #f4f4f5)",
+            color: currentValue
+              ? "var(--background, #ffffff)"
+              : "var(--foreground, #3f3f46)",
             cursor: "pointer",
           }}
         >
@@ -136,17 +142,15 @@ export function EditorSidebar() {
     page,
     saveChanges,
   } = useEditor();
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(page.sections.map((section) => [section.id, false])),
+  );
 
   useEffect(() => {
-    if (!isEditing) {
-      return;
-    }
-
     setOpenSections(
-      Object.fromEntries(page.sections.map((section) => [section.id, true])),
+      Object.fromEntries(page.sections.map((section) => [section.id, false])),
     );
-  }, [isEditing, page.sections]);
+  }, [page.sections]);
 
   useEffect(() => {
     if (!activeFieldId) {
@@ -171,6 +175,12 @@ export function EditorSidebar() {
     await saveChanges();
   };
 
+  const setAllSections = (open: boolean) => {
+    setOpenSections(
+      Object.fromEntries(page.sections.map((section) => [section.id, open])),
+    );
+  };
+
   return (
     <aside
       style={{
@@ -181,10 +191,10 @@ export function EditorSidebar() {
         height: "100vh",
         width: "100%",
         maxWidth: 420,
-        borderRight: "1px solid #e4e4e7",
-        background: "#faf8f4",
-        color: "#18181b",
-        boxShadow: "0 28px 80px rgba(24,24,27,0.18)",
+        borderRight: "1px solid var(--border-strong, #e4e4e7)",
+        background: "var(--surface, #faf8f4)",
+        color: "var(--foreground, #18181b)",
+        boxShadow: "var(--shadow-heavy, 0 28px 80px rgba(24,24,27,0.18))",
         transform: isEditing ? "translateX(0)" : "translateX(-100%)",
         transition: "transform 220ms ease",
         fontFamily:
@@ -200,8 +210,8 @@ export function EditorSidebar() {
       >
         <div
           style={{
-            borderBottom: "1px solid #e4e4e7",
-            padding: "20px 24px",
+            borderBottom: "1px solid var(--border-strong, #e4e4e7)",
+            padding: "16px 20px",
           }}
         >
           <div
@@ -213,22 +223,12 @@ export function EditorSidebar() {
             }}
           >
             <div>
-              <p
-                style={{
-                  fontSize: 12,
-                  letterSpacing: "0.24em",
-                  textTransform: "uppercase",
-                  color: "#71717a",
-                }}
-              >
-                NextEditor
-              </p>
               <h2
                 style={{
-                  marginTop: 8,
-                  fontSize: 30,
-                  lineHeight: 1.1,
+                  fontSize: 18,
+                  lineHeight: 1.2,
                   fontWeight: 600,
+                  color: "var(--foreground, #18181b)",
                 }}
               >
                 {page.label}
@@ -237,7 +237,7 @@ export function EditorSidebar() {
                 style={{
                   marginTop: 4,
                   fontSize: 14,
-                  color: "#71717a",
+                  color: "var(--muted, #71717a)",
                 }}
               >
                 {isDirty ? "Unsaved changes" : "All changes saved"}
@@ -251,26 +251,52 @@ export function EditorSidebar() {
               Close
             </button>
           </div>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving}
+          <div
             style={{
-              ...primaryButtonStyle,
-              marginTop: 20,
-              background: isSaving ? "#a1a1aa" : "#18181b",
-              cursor: isSaving ? "not-allowed" : "pointer",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 16,
             }}
           >
-            {isSaving ? "Saving..." : "Save Changes"}
-          </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              style={{
+                ...primaryButtonStyle,
+                background: isSaving
+                  ? "var(--muted, #a1a1aa)"
+                  : "var(--foreground, #18181b)",
+                color: "var(--background, #ffffff)",
+                cursor: isSaving ? "not-allowed" : "pointer",
+              }}
+            >
+              {isSaving ? "Saving..." : "Save Changes"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setAllSections(true)}
+              style={secondaryButtonStyle}
+            >
+              Open All
+            </button>
+            <button
+              type="button"
+              onClick={() => setAllSections(false)}
+              style={secondaryButtonStyle}
+            >
+              Close All
+            </button>
+          </div>
         </div>
 
         <div
           style={{
             flex: 1,
             overflowY: "auto",
-            padding: "20px 16px",
+            padding: "16px 14px",
           }}
         >
           {page.sections.map((section) => {
@@ -279,10 +305,10 @@ export function EditorSidebar() {
               <div
                 key={section.id}
                 style={{
-                  marginBottom: 16,
-                  borderRadius: 24,
-                  border: "1px solid #e4e4e7",
-                  background: "#ffffff",
+                  marginBottom: 12,
+                  borderRadius: 12,
+                  border: "1px solid var(--border-strong, #e4e4e7)",
+                  background: "var(--surface-muted, #ffffff)",
                   overflow: "hidden",
                 }}
               >
@@ -299,7 +325,7 @@ export function EditorSidebar() {
                     width: "100%",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    padding: "16px 20px",
+                    padding: "14px 16px",
                     textAlign: "left",
                     border: 0,
                     background: "transparent",
@@ -310,9 +336,7 @@ export function EditorSidebar() {
                     style={{
                       fontSize: 14,
                       fontWeight: 600,
-                      letterSpacing: "0.18em",
-                      textTransform: "uppercase",
-                      color: "#52525b",
+                      color: "var(--foreground, #52525b)",
                     }}
                   >
                     {section.label}
@@ -320,7 +344,7 @@ export function EditorSidebar() {
                   <span
                     style={{
                       fontSize: 14,
-                      color: "#a1a1aa",
+                      color: "var(--muted, #a1a1aa)",
                     }}
                   >
                     {isOpen ? "Hide" : "Show"}
@@ -331,8 +355,8 @@ export function EditorSidebar() {
                     style={{
                       display: "grid",
                       gap: 12,
-                      borderTop: "1px solid #e4e4e7",
-                      padding: 16,
+                      borderTop: "1px solid var(--border-strong, #e4e4e7)",
+                      padding: 14,
                     }}
                   >
                     {section.fields.map((field) => (
@@ -352,33 +376,37 @@ export function EditorSidebar() {
 function inputStyle(extra?: React.CSSProperties): React.CSSProperties {
   return {
     width: "100%",
-    borderRadius: 12,
-    border: "1px solid #d4d4d8",
+    borderRadius: 10,
+    border: "1px solid var(--border-strong, #d4d4d8)",
+    background: "var(--surface, #ffffff)",
     padding: "10px 12px",
     fontSize: 14,
-    color: "#18181b",
+    color: "var(--foreground, #18181b)",
     outline: "none",
     ...extra,
   };
 }
 
-const primaryButtonStyle: React.CSSProperties = {
+const primaryButtonStyle: CSSProperties = {
   display: "inline-flex",
   border: 0,
-  borderRadius: 999,
+  borderRadius: 10,
   padding: "10px 16px",
   fontSize: 14,
   fontWeight: 600,
-  color: "#ffffff",
 };
 
-const secondaryButtonStyle: React.CSSProperties = {
-  borderRadius: 999,
-  border: "1px solid #d4d4d8",
-  background: "#ffffff",
+const secondaryButtonStyle: CSSProperties = {
+  borderRadius: 10,
+  border: "1px solid var(--border-strong, #d4d4d8)",
+  background: "var(--surface, #ffffff)",
   padding: "8px 12px",
   fontSize: 14,
   fontWeight: 500,
-  color: "#3f3f46",
+  color: "var(--foreground, #3f3f46)",
   cursor: "pointer",
 };
+
+function formatFieldType(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}

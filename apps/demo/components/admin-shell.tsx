@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { ContentTypeDefinition } from "@/lib/content-types";
 import type { DemoUser } from "@/lib/user-store";
 
@@ -22,6 +22,7 @@ export function AdminShell({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedType = searchParams.get("type");
+  const [visitHovered, setVisitHovered] = useState(false);
 
   return (
     <div
@@ -44,27 +45,51 @@ export function AdminShell({
           padding: 24,
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <SidebarLink href="/admin" active={pathname === "/admin" && !selectedType}>
-            Dashboard
-          </SidebarLink>
-          <SidebarLink href="/admin/pages" active={pathname === "/admin/pages"}>
-            Pages
-          </SidebarLink>
-          {contentTypes.map((type) => (
-            <SidebarLink
-              key={type.id}
-              href={`/admin?type=${type.id}`}
-              active={pathname === "/admin" && selectedType === type.id}
-            >
-              {type.label}
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <Link
+            href="/"
+            onMouseEnter={() => setVisitHovered(true)}
+            onMouseLeave={() => setVisitHovered(false)}
+            style={{
+              display: "inline-flex",
+              minHeight: 42,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 12,
+              border: "1px solid var(--border-strong)",
+              color: "var(--foreground)",
+              background: visitHovered ? "var(--surface-muted)" : "transparent",
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: 600,
+              lineHeight: 1,
+              transition: "background-color 140ms ease, border-color 140ms ease",
+            }}
+          >
+            Visit Site
+          </Link>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <SidebarLink href="/admin" active={pathname === "/admin" && !selectedType}>
+              Dashboard
             </SidebarLink>
-          ))}
-          {isAdmin ? (
-            <SidebarLink href="/admin/users" active={pathname === "/admin/users"}>
-              Users
+            <SidebarLink href="/admin/pages" active={pathname === "/admin/pages"}>
+              Pages
             </SidebarLink>
-          ) : null}
+            {contentTypes.map((type) => (
+              <SidebarLink
+                key={type.id}
+                href={`/admin?type=${type.id}`}
+                active={pathname === "/admin" && selectedType === type.id}
+              >
+                {type.label}
+              </SidebarLink>
+            ))}
+            {isAdmin ? (
+              <SidebarLink href="/admin/users" active={pathname === "/admin/users"}>
+                Users
+              </SidebarLink>
+            ) : null}
+          </div>
         </div>
 
         <div>
@@ -133,16 +158,25 @@ function SidebarLink({
   children: ReactNode;
   href: string;
 }) {
+  const [hovered, setHovered] = useState(false);
+  const showBackground = active || hovered;
+
   return (
     <Link
       href={href}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         display: "block",
+        borderRadius: 12,
+        padding: "10px 12px",
         fontSize: 16,
         fontWeight: 700,
-        color: active ? "var(--foreground)" : "var(--muted)",
+        color: active ? "var(--foreground)" : hovered ? "var(--foreground)" : "var(--muted)",
+        background: showBackground ? "rgba(127, 127, 127, 0.09)" : "transparent",
         textDecoration: "none",
         lineHeight: 1.3,
+        transition: "background-color 140ms ease, color 140ms ease",
       }}
     >
       {children}

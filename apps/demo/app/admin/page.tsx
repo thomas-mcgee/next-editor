@@ -22,33 +22,49 @@ export default async function AdminDashboardPage({
     return (
       <section className="font-sans">
         <div className="flex items-start justify-between gap-6">
-          <div>
-            <h2
-              className="text-3xl font-semibold"
-              style={{ color: "var(--foreground)" }}
-            >
+          <div className="flex items-center gap-3">
+            <h2 className="text-3xl font-semibold" style={{ color: "var(--foreground)" }}>
               {type.label}
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6" style={{ color: "var(--muted)" }}>
-              {type.description}
-            </p>
+            <span
+              className="rounded-full px-3 py-1 text-xs font-medium"
+              style={{
+                border: "1px solid var(--border-strong)",
+                color: "var(--muted)",
+                background: "var(--surface)",
+              }}
+            >
+              {entries.length}
+            </span>
           </div>
-          <div
-            className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em]"
+          <Link
+            href={`/admin/${type.id}/new`}
+            className="rounded-xl px-4 py-2 text-sm font-semibold"
             style={{
               border: "1px solid var(--border-strong)",
-              color: "var(--muted)",
+              color: "var(--foreground)",
+              background: "var(--surface)",
+              textDecoration: "none",
             }}
           >
-            {entries.length} entries
-          </div>
+            New {type.singularLabel}
+          </Link>
         </div>
+        <p className="mt-3 max-w-2xl text-sm leading-6" style={{ color: "var(--muted)" }}>
+          {type.description}
+        </p>
 
         <div
           className="mt-6 overflow-hidden rounded-xl"
-          style={{ border: "1px solid var(--border-strong)" }}
+          style={{
+            border: "1px solid var(--border-strong)",
+            background: "var(--surface)",
+          }}
         >
-          <table className="min-w-full divide-y divide-zinc-200 text-left text-sm">
+          <table
+            className="min-w-full text-left text-sm"
+            style={{ background: "var(--surface)" }}
+          >
             <thead style={{ background: "var(--surface-muted)" }}>
               <tr>
                 <th className="px-4 py-3 font-medium" style={{ color: "var(--muted)" }}>
@@ -65,10 +81,13 @@ export default async function AdminDashboardPage({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200">
+            <tbody>
               {entries.length > 0 ? (
                 entries.map((entry) => (
-                  <tr key={entry.id}>
+                  <tr
+                    key={entry.id}
+                    style={{ borderTop: "1px solid var(--border-strong)" }}
+                  >
                     <td className="px-4 py-3">
                       <div>
                         <p className="font-medium" style={{ color: "var(--foreground)" }}>
@@ -86,7 +105,7 @@ export default async function AdminDashboardPage({
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
+                        className="rounded-full px-3 py-1 text-xs font-medium"
                         style={{
                           border: "1px solid var(--border-strong)",
                           color: "var(--foreground)",

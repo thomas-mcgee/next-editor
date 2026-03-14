@@ -45,8 +45,14 @@ function RegionChrome({
       className={className}
       style={{
         position: "relative",
-        borderRadius: 16,
-        outline: isEditing ? `1px solid ${active ? "#18181b" : "#d4d4d8"}` : "none",
+        borderRadius: 12,
+        outline: isEditing
+          ? `1px solid ${
+              active
+                ? "var(--foreground, #18181b)"
+                : "var(--border-strong, #d4d4d8)"
+            }`
+          : "none",
         outlineOffset: isEditing ? 4 : 0,
         transition: "outline-color 160ms ease",
       }}
@@ -60,14 +66,14 @@ function RegionChrome({
             top: -12,
             right: 12,
             zIndex: 10,
-            borderRadius: 999,
-            border: "1px solid #d4d4d8",
-            background: "#ffffff",
+            borderRadius: 10,
+            border: "1px solid var(--border-strong, #d4d4d8)",
+            background: "var(--surface, #ffffff)",
             padding: "4px 12px",
             fontSize: 12,
             fontWeight: 600,
-            color: "#18181b",
-            boxShadow: "0 8px 20px rgba(24,24,27,0.12)",
+            color: "var(--foreground, #18181b)",
+            boxShadow: "var(--shadow-soft, 0 8px 20px rgba(24,24,27,0.12))",
             cursor: "pointer",
           }}
         >
@@ -130,7 +136,7 @@ export function EditableImage({
         style={{
           position: "relative",
           overflow: "hidden",
-          borderRadius: 28,
+          borderRadius: 16,
           ...imageWrapperStyle,
         }}
       >

@@ -115,3 +115,132 @@ html[data-theme="dark"] ::selection {
     linear-gradient(90deg, rgba(24, 24, 27, 0.05) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+
+.site-theme-scope {
+  --background: #f5f1e8;
+  --foreground: #18181b;
+  --surface: #fffdf8;
+  --surface-elevated: rgba(255, 255, 255, 0.92);
+  --surface-muted: #f3eee4;
+  --muted: #6b7280;
+  --accent: #1f2937;
+  --border-strong: #d4d4d8;
+  --border-soft: rgba(255, 255, 255, 0.72);
+  --shadow-heavy: 0 24px 80px rgba(24, 24, 27, 0.12);
+  --shadow-soft: 0 20px 60px rgba(24, 24, 27, 0.08);
+  --hero-linen-start: #f7d7a5;
+  --hero-linen-mid: #fff4ea;
+  --hero-linen-end: #ffffff;
+  --hero-stone-start: #d6d3d1;
+  --hero-stone-mid: #f5f5f4;
+  --hero-stone-end: #ffffff;
+  color-scheme: light;
+}
+
+.demo-richtext-editor {
+  min-height: 260px;
+  outline: none;
+  box-shadow: none;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+.demo-richtext-editor:focus,
+.demo-richtext-editor:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.demo-richtext-editor p.is-editor-empty:first-child::before {
+  color: var(--muted);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.demo-richtext-editor p,
+.demo-richtext-editor ul,
+.demo-richtext-editor ol,
+.demo-richtext-editor blockquote,
+.demo-richtext-editor h2 {
+  margin: 0 0 1rem;
+  font-weight: 400;
+}
+
+.demo-richtext-editor h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.demo-richtext-editor ul,
+.demo-richtext-editor ol {
+  padding-left: 1.5rem;
+  list-style-position: outside;
+}
+
+.demo-richtext-editor ul {
+  list-style-type: disc;
+}
+
+.demo-richtext-editor ol {
+  list-style-type: decimal;
+}
+
+.demo-richtext-editor ul li {
+  list-style-type: disc;
+}
+
+.demo-richtext-editor ol li {
+  list-style-type: decimal;
+}
+
+.demo-richtext-editor li {
+  display: list-item;
+  margin: 0.35rem 0;
+}
+
+.demo-richtext-editor li > p {
+  margin: 0;
+}
+
+.demo-richtext-editor ul li::marker,
+.demo-richtext-editor ol li::marker {
+  color: var(--foreground);
+}
+
+.demo-richtext-editor blockquote {
+  border-left: 3px solid var(--border-strong);
+  color: var(--muted);
+  font-style: italic;
+  padding-left: 1rem;
+}
+
+.demo-richtext-editor strong,
+.demo-richtext-editor b {
+  font-weight: 700;
+}
+
+.demo-richtext-editor em,
+.demo-richtext-editor i {
+  font-style: italic;
+}
+
+.demo-richtext-editor a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.demo-richtext-editor img {
+  border-radius: 12px;
+  display: block;
+  height: auto;
+  margin: 1rem 0;
+  max-width: 100%;
+}

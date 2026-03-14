@@ -32,7 +32,7 @@ export default async function LoginPage({
             <input
               name="email"
               type="email"
-              defaultValue="editor@example.com"
+              defaultValue="admin@example.com"
               className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
             />
           </label>
@@ -59,9 +59,9 @@ export default async function LoginPage({
         </form>
         <p className="mt-6 text-sm text-zinc-500">
           Demo credentials:
-          <span className="ml-2 font-medium text-zinc-900">editor@example.com</span>
+          <span className="ml-2 font-medium text-zinc-900">admin@example.com</span>
           <span className="mx-2 text-zinc-400">or</span>
-          <span className="font-medium text-zinc-900">admin@example.com</span>
+          <span className="font-medium text-zinc-900">editor@example.com</span>
           <span className="ml-2">with password</span>
           <span className="ml-2 font-medium text-zinc-900">demo-password</span>
         </p>
