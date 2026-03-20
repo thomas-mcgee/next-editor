@@ -8,13 +8,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "lib": ["ES2020", "DOM"],
-    "baseUrl": ".",
-    "paths": {
-      "next": ["../../apps/demo/node_modules/next"],
-      "next/*": ["../../apps/demo/node_modules/next/*"]
-    },
-    "typeRoots": ["../../apps/demo/node_modules/@types"]
+    "lib": ["ES2020", "DOM"]
   },
   "include": ["src/**/*"]
 }

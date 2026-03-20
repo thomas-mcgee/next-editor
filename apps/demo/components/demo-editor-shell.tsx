@@ -5,6 +5,8 @@ import {
   EditorSidebar,
   EditorViewport,
   FloatingAdminBar,
+} from "next-editor/client";
+import {
   type EditorPageValues,
   type PageDefinition,
 } from "next-editor";

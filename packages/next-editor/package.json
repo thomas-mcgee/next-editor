@@ -3,20 +3,51 @@
   "version": "0.1.0",
   "description": "Minimal inline editing layer for custom Next.js sites.",
   "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.mjs"
+    },
+    "./b2": {
+      "types": "./dist/b2.d.ts",
+      "import": "./dist/b2.mjs",
+      "require": "./dist/b2.js",
+      "default": "./dist/b2.mjs"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.mjs",
+      "require": "./dist/client.js",
+      "default": "./dist/client.mjs"
+    },
+    "./rich-text": {
+      "types": "./dist/rich-text-editor.d.ts",
+      "import": "./dist/rich-text-editor.mjs",
+      "require": "./dist/rich-text-editor.js",
+      "default": "./dist/rich-text-editor.mjs"
+    },
+    "./lexxy.css": "./styles/lexxy.css"
   },
+  "sideEffects": [
+    "./styles/*.css"
+  ],
   "files": [
     "dist",
+    "styles",
     "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "build": "tsup src/index.ts src/client.ts src/b2.ts src/rich-text-editor.tsx --format esm,cjs --dts",
     "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@37signals/lexxy": "^0.8.5-beta",
+    "@rails/activestorage": "^8.1.200",
+    "@aws-sdk/client-s3": "^3.1012.0"
   },
   "peerDependencies": {
     "next": ">=15",
@@ -24,6 +55,7 @@
     "react-dom": ">=19"
   },
   "devDependencies": {
+    "next": "^16.1.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "tsup": "^8.4.0",

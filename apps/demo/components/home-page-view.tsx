@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { EditableImage, EditableText, useEditor } from "next-editor";
+import { EditableImage, EditableText, useEditor } from "next-editor/client";
 
 export function HomePageView() {
   const { getFieldValue } = useEditor();

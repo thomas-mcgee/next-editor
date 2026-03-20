@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { RichTextEditor } from "next-editor/rich-text";
 import type { ContentTypeDefinition, ContentTypeField } from "@/lib/content-types";
 
 type NewContentFormProps = {
@@ -73,8 +73,8 @@ export function NewContentForm({ definition }: NewContentFormProps) {
           Save {definition.singularLabel}
         </button>
         <p className="text-sm" style={{ color: "var(--muted)" }}>
-          Rich text editor is wired for UI shaping. Save behavior can connect to
-          your content model next.
+          Lexxy is wired in for authoring, and image uploads will post to
+          Backblaze B2 once the demo env vars are set.
         </p>
       </div>
     </form>
@@ -102,6 +102,10 @@ function FieldControl({
         <RichTextEditor
           name={field.id}
           placeholder={`Write the ${field.label.toLowerCase()}...`}
+          shellClassName="demo-lexxy-shell"
+          editorClassName="demo-lexxy-editor"
+          loadingClassName="demo-lexxy-loading"
+          statusClassName="mt-2 text-sm"
         />
       </div>
     );

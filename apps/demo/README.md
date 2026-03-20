@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This app is the local consumer for the `next-editor` package. It should use the
+same package surface that downstream projects will use.
 
 ## Getting Started
 
-First, run the development server:
+From the repo root:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Backblaze B2 image uploads
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Set these environment variables to enable image uploads from the packaged Lexxy
+editor:
 
-## Learn More
+```bash
+B2_ENDPOINT=https://s3.<region>.backblazeb2.com
+B2_REGION=<region>
+B2_BUCKET_NAME=<bucket-name>
+B2_APPLICATION_KEY_ID=<application-key-id>
+B2_APPLICATION_KEY=<application-key>
+B2_PUBLIC_BASE_URL=https://f000.backblazeb2.com/file/<bucket-name>
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`B2_PUBLIC_BASE_URL` should be the public base URL for the bucket, because the
+upload route returns `${B2_PUBLIC_BASE_URL}/${object-key}` after each upload.

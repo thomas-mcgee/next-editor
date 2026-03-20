@@ -1,10 +1,14 @@
 {
   "name": "next-editor-workspace",
   "private": true,
-  "packageManager": "pnpm@10.6.3",
+  "packageManager": "npm@11.9.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "build": "pnpm -r build",
-    "dev": "pnpm --filter demo dev",
-    "lint": "pnpm -r lint"
+    "build": "npm run build --workspace=next-editor && npm run build --workspace=demo",
+    "dev": "npm run dev --workspace=demo",
+    "lint": "npm run lint --workspaces --if-present"
   }
 }

@@ -137,110 +137,102 @@ html[data-theme="dark"] ::selection {
   color-scheme: light;
 }
 
-.demo-richtext-editor {
+.demo-lexxy-shell {
+  --lexxy-color-canvas: var(--surface);
+  --lexxy-color-ink: var(--foreground);
+  --lexxy-color-text: var(--foreground);
+  --lexxy-color-text-subtle: var(--muted);
+  --lexxy-color-link: var(--foreground);
+  --lexxy-color-ink-medium: color-mix(in oklab, var(--foreground) 65%, transparent);
+  --lexxy-color-ink-light: color-mix(in oklab, var(--foreground) 40%, transparent);
+  --lexxy-color-ink-lighter: color-mix(in oklab, var(--foreground) 16%, transparent);
+  --lexxy-color-ink-lightest: var(--surface-muted);
+  --lexxy-color-ink-inverted: var(--background);
+  --lexxy-color-code-bg: color-mix(in oklab, var(--surface-muted) 88%, var(--foreground) 12%);
+  --lexxy-color-selected: color-mix(in oklab, var(--foreground) 12%, transparent);
+  --lexxy-color-selected-hover: color-mix(in oklab, var(--foreground) 18%, transparent);
+  --lexxy-color-selected-dark: var(--foreground);
+  --lexxy-color-table-header-bg: var(--surface-muted);
+  --lexxy-color-table-cell-border: color-mix(in oklab, var(--foreground) 16%, transparent);
+  --lexxy-color-table-cell-selected-border: var(--foreground);
+  --lexxy-color-table-cell-selected-bg: color-mix(in oklab, var(--foreground) 10%, transparent);
+  --lexxy-color-table-cell-add: color-mix(in oklab, var(--foreground) 10%, transparent);
+  --lexxy-color-table-cell-toggle: color-mix(in oklab, var(--foreground) 10%, transparent);
+  --lexxy-focus-ring-color: color-mix(in oklab, var(--foreground) 22%, transparent);
+  --lexxy-shadow: var(--shadow-soft);
+}
+
+.demo-lexxy-editor {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.demo-lexxy-loading {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  color: var(--muted);
+  display: flex;
   min-height: 260px;
-  outline: none;
-  box-shadow: none;
+  padding: 1rem 1.1rem 1.25rem;
+}
+
+.demo-lexxy-editor .lexxy-editor__content {
   color: var(--foreground);
   font-family: inherit;
   font-size: 1rem;
-  font-style: normal;
-  font-weight: 400;
   line-height: 1.7;
+  min-height: 260px;
+  padding: 1rem 1.1rem 1.25rem;
 }
 
-.demo-richtext-editor:focus,
-.demo-richtext-editor:focus-visible {
-  outline: none;
-  box-shadow: none;
+.demo-lexxy-editor .lexxy-editor__toolbar {
+  padding: 0.75rem;
 }
 
-.demo-richtext-editor p.is-editor-empty:first-child::before {
-  color: var(--muted);
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
-.demo-richtext-editor p,
-.demo-richtext-editor ul,
-.demo-richtext-editor ol,
-.demo-richtext-editor blockquote,
-.demo-richtext-editor h2 {
+.demo-lexxy-editor .lexxy-editor__content p,
+.demo-lexxy-editor .lexxy-editor__content ul,
+.demo-lexxy-editor .lexxy-editor__content ol,
+.demo-lexxy-editor .lexxy-editor__content blockquote,
+.demo-lexxy-editor .lexxy-editor__content h1,
+.demo-lexxy-editor .lexxy-editor__content h2,
+.demo-lexxy-editor .lexxy-editor__content h3 {
   margin: 0 0 1rem;
-  font-weight: 400;
 }
 
-.demo-richtext-editor h2 {
-  font-size: 1.5rem;
+.demo-lexxy-editor .lexxy-editor__content h1,
+.demo-lexxy-editor .lexxy-editor__content h2,
+.demo-lexxy-editor .lexxy-editor__content h3 {
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
-.demo-richtext-editor ul,
-.demo-richtext-editor ol {
-  padding-left: 1.5rem;
-  list-style-position: outside;
+.demo-lexxy-editor .lexxy-editor__content h1 {
+  font-size: 2rem;
 }
 
-.demo-richtext-editor ul {
-  list-style-type: disc;
+.demo-lexxy-editor .lexxy-editor__content h2 {
+  font-size: 1.5rem;
 }
 
-.demo-richtext-editor ol {
-  list-style-type: decimal;
+.demo-lexxy-editor .lexxy-editor__content h3 {
+  font-size: 1.2rem;
 }
 
-.demo-richtext-editor ul li {
-  list-style-type: disc;
-}
-
-.demo-richtext-editor ol li {
-  list-style-type: decimal;
-}
-
-.demo-richtext-editor li {
-  display: list-item;
-  margin: 0.35rem 0;
-}
-
-.demo-richtext-editor li > p {
-  margin: 0;
-}
-
-.demo-richtext-editor ul li::marker,
-.demo-richtext-editor ol li::marker {
-  color: var(--foreground);
-}
-
-.demo-richtext-editor blockquote {
+.demo-lexxy-editor .lexxy-editor__content blockquote {
   border-left: 3px solid var(--border-strong);
   color: var(--muted);
   font-style: italic;
   padding-left: 1rem;
 }
 
-.demo-richtext-editor strong,
-.demo-richtext-editor b {
-  font-weight: 700;
-}
-
-.demo-richtext-editor em,
-.demo-richtext-editor i {
-  font-style: italic;
-}
-
-.demo-richtext-editor a {
+.demo-lexxy-editor .lexxy-editor__content a {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 0.18em;
 }
 
-.demo-richtext-editor img {
+.demo-lexxy-editor img {
   border-radius: 12px;
-  display: block;
-  height: auto;
-  margin: 1rem 0;
-  max-width: 100%;
 }
