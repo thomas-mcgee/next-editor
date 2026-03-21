@@ -64,7 +64,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsup",
+    "build": "rm -rf dist && tsup && mkdir -p dist/admin dist/auth && cp src/admin/index.d.ts dist/admin/index.d.ts && cp src/auth/index.d.ts dist/auth/index.d.ts",
+    "prepack": "npm run build",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
