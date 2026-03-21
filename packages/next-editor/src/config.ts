@@ -1,7 +1,10 @@
 import type {
   BaseFieldDefinition,
+  CollectionDefinition,
+  CollectionFieldDefinition,
   FieldDefinition,
   FieldOption,
+  NextEditorConfig,
   PageDefinition,
   PageSectionDefinition,
 } from "./types";
@@ -9,11 +12,27 @@ import type {
 type DefinePageInput = {
   id: string;
   label: string;
+  path?: string;
+  description?: string;
   sections: PageSectionDefinition[];
   includeSeoSection?: boolean;
 };
 
-function createField<T extends FieldDefinition>(
+type DefineCollectionInput = {
+  id: string;
+  label: string;
+  singularLabel?: string;
+  path?: string;
+  description?: string;
+  useAsTitle?: string;
+  sections: Array<{
+    id: string;
+    label: string;
+    fields: CollectionFieldDefinition[];
+  }>;
+};
+
+function createField<T extends CollectionFieldDefinition>(
   field: T,
   sectionId?: string,
 ): T {
@@ -44,6 +63,34 @@ export function image(field: BaseFieldDefinition) {
   });
 }
 
+export function slug(field: BaseFieldDefinition) {
+  return createField({
+    ...field,
+    type: "slug",
+  });
+}
+
+export function dateTime(field: BaseFieldDefinition) {
+  return createField({
+    ...field,
+    type: "dateTime",
+  });
+}
+
+export function richText(field: BaseFieldDefinition) {
+  return createField({
+    ...field,
+    type: "richtext",
+  });
+}
+
+export function embed(field: BaseFieldDefinition) {
+  return createField({
+    ...field,
+    type: "embed",
+  });
+}
+
 export function toggle(field: BaseFieldDefinition) {
   return createField({
     ...field,
@@ -58,6 +105,16 @@ export function select(
     ...field,
     type: "select",
   });
+}
+
+export function repeater(
+  field: BaseFieldDefinition & { fields: CollectionFieldDefinition[] },
+) {
+  return {
+    ...field,
+    type: "repeater" as const,
+    fields: field.fields,
+  };
 }
 
 function createSeoSection(): PageSectionDefinition {
@@ -138,6 +195,37 @@ export function definePage(input: DefinePageInput): PageDefinition {
   return {
     id: input.id,
     label: input.label,
+    path: input.path ?? inferPagePath(input.id),
+    description: input.description,
     sections,
   };
+}
+
+export function defineCollection(input: DefineCollectionInput): CollectionDefinition {
+  return {
+    id: input.id,
+    label: input.label,
+    singularLabel: input.singularLabel,
+    path: input.path,
+    description: input.description,
+    useAsTitle: input.useAsTitle,
+    sections: input.sections.map((section) => ({
+      ...section,
+      fields: section.fields.map((field) => ({
+        ...field,
+        sectionId: section.id,
+      })),
+    })),
+  };
+}
+
+export function defineConfig(input: NextEditorConfig): NextEditorConfig {
+  return {
+    pages: input.pages,
+    collections: input.collections ?? [],
+  };
+}
+
+function inferPagePath(id: string) {
+  return id === "home" ? "/" : `/${id}`;
 }

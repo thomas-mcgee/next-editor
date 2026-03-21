@@ -6,16 +6,12 @@ import {
   EditorViewport,
   FloatingAdminBar,
 } from "next-editor/client";
-import {
-  type EditorPageValues,
-  type PageDefinition,
-} from "next-editor";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
-type DemoEditorShellProps = {
-  page: PageDefinition;
-  initialValues: EditorPageValues;
-  canEdit: boolean;
+type DemoEditorShellProps = Pick<
+  ComponentProps<typeof EditorProvider>,
+  "page" | "initialValues" | "canEdit"
+> & {
   children: ReactNode;
 };
 
@@ -30,7 +26,8 @@ export function DemoEditorShell({
       page={page}
       initialValues={initialValues}
       canEdit={canEdit}
-      saveUrl="/api/editor/page"
+      saveUrl="/api/ne/content"
+      imageUploadUrl="/api/ne/upload"
       adminHref="/admin"
     >
       {canEdit ? <EditorSidebar /> : null}

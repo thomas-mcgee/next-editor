@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 export type UploadImageHandler = (file: File) => Promise<string>;
 
@@ -10,6 +10,7 @@ export type RichTextEditorProps = {
   placeholder?: string;
   uploadImage?: UploadImageHandler;
   uploadUrl?: string;
+  onChange?: (value: string) => void;
   shellClassName?: string;
   editorClassName?: string;
   loadingClassName?: string;
@@ -36,6 +37,7 @@ export function RichTextEditor({
   placeholder = "Start writing...",
   uploadImage,
   uploadUrl = "/api/uploads/image",
+  onChange,
   shellClassName,
   editorClassName,
   loadingClassName,
@@ -45,6 +47,24 @@ export function RichTextEditor({
   const [isReady, setIsReady] = useState(false);
   const [message, setMessage] = useState<string>();
   const [html, setHtml] = useState(initialValue);
+  const resolvedTheme = useResolvedNeTheme();
+  const themeStyle = useMemo<CSSProperties>(
+    () => ({
+      colorScheme: resolvedTheme,
+      color: "var(--ne-fg, var(--lexxy-color-ink))",
+      backgroundColor: "var(--ne-surface, var(--lexxy-color-canvas))",
+      ["--lexxy-color-canvas" as string]: "var(--ne-surface, var(--lexxy-color-ink-inverted))",
+      ["--lexxy-color-text" as string]: "var(--ne-fg, var(--lexxy-color-ink))",
+      ["--lexxy-color-ink" as string]: "var(--ne-fg, oklch(20% 0 0))",
+      ["--lexxy-color-ink-inverted" as string]: "var(--ne-bg, white)",
+      ["--lexxy-color-ink-medium" as string]: "var(--ne-muted, oklch(40% 0 0))",
+      ["--lexxy-color-ink-lighter" as string]: "var(--ne-border-strong, oklch(85% 0 0))",
+      ["--lexxy-color-ink-lightest" as string]: "var(--ne-surface-muted, oklch(96% 0 0))",
+      ["--lexxy-color-table-header-bg" as string]: "var(--ne-surface-muted, var(--lexxy-color-ink-lightest))",
+      ["--lexxy-shadow" as string]: "var(--ne-shadow-soft, 0 2px 8px rgba(0, 0, 0, 0.1))",
+    }),
+    [resolvedTheme],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -105,7 +125,9 @@ export function RichTextEditor({
     };
 
     const handleChange = () => {
-      setHtml(editor.value);
+      const nextValue = editor.value;
+      setHtml(nextValue);
+      onChange?.(nextValue);
       setMessage(undefined);
     };
 
@@ -116,10 +138,13 @@ export function RichTextEditor({
       editor.removeEventListener("lexxy:file-accept", handleFileAccept);
       editor.removeEventListener("lexxy:change", handleChange);
     };
-  }, [initialValue, isReady, uploadImage, uploadUrl]);
+  }, [initialValue, isReady, onChange, uploadImage, uploadUrl]);
 
   return (
-    <div className={joinClassNames("next-editor-lexxy", shellClassName)}>
+    <div
+      className={joinClassNames("next-editor-lexxy", shellClassName)}
+      style={themeStyle}
+    >
       <input type="hidden" name={name} value={html} />
       {isReady ? (
         <lexxy-editor
@@ -179,4 +204,42 @@ function escapeAttribute(value: string) {
 
 function joinClassNames(...classNames: Array<string | undefined>) {
   return classNames.filter(Boolean).join(" ");
+}
+
+function useResolvedNeTheme() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const root = document.documentElement;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const syncTheme = () => {
+      const configured = root.dataset.neTheme;
+      const nextTheme =
+        configured === "dark" || (configured === "system" && media.matches)
+          ? "dark"
+          : "light";
+      setTheme(nextTheme);
+    };
+
+    syncTheme();
+
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ["data-ne-theme"],
+    });
+    media.addEventListener("change", syncTheme);
+
+    return () => {
+      observer.disconnect();
+      media.removeEventListener("change", syncTheme);
+    };
+  }, []);
+
+  return theme;
 }

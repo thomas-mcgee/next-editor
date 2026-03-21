@@ -12,6 +12,7 @@ import type {
   EditableRegionProps,
   EditableTextProps,
 } from "./types";
+import { useEditorThemeVars } from "./editor-theme";
 import { useEditor } from "./editor-context";
 import { cx } from "./utils";
 
@@ -27,6 +28,7 @@ function RegionChrome({
   const { canEdit, isEditing, activeFieldId, focusField, registerRegion } =
     useEditor();
   const ref = useRef<HTMLDivElement>(null);
+  const themeVars = useEditorThemeVars();
 
   useEffect(() => {
     registerRegion(fieldId, ref.current);
@@ -44,6 +46,7 @@ function RegionChrome({
       ref={ref}
       className={className}
       style={{
+        ...themeVars,
         position: "relative",
         borderRadius: 12,
         outline: isEditing

@@ -101,6 +101,7 @@ function FieldControl({
         </div>
         <RichTextEditor
           name={field.id}
+          uploadImage={undefined}
           placeholder={`Write the ${field.label.toLowerCase()}...`}
           shellClassName="demo-lexxy-shell"
           editorClassName="demo-lexxy-editor"

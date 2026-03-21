@@ -1,0 +1,65 @@
+"use server";
+
+import { randomUUID } from "node:crypto";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { auth } from "../auth/config";
+import { deleteCollectionEntry, saveCollectionEntry } from "../content/collection-store";
+import type { CollectionStatus } from "../types";
+
+async function requireEditor() {
+  const session = await auth();
+  const role = session?.user?.role;
+  if (role !== "editor" && role !== "admin") redirect("/admin/login");
+  return { session, userId: session!.user.id, isAdmin: role === "admin" };
+}
+
+export async function neSaveCollectionEntryAction(formData: FormData) {
+  const { userId } = await requireEditor();
+
+  const collectionId = String(formData.get("collectionId") ?? "").trim();
+  const entryId = String(formData.get("entryId") ?? "").trim() || randomUUID();
+  const slug = String(formData.get("slug") ?? "").trim() || null;
+  const status = String(formData.get("status") ?? "draft") as CollectionStatus;
+  const publishedAtRaw = String(formData.get("publishedAt") ?? "").trim();
+  const valuesRaw = String(formData.get("values") ?? "{}");
+
+  if (!collectionId) redirect("/admin");
+  if (!["draft", "published", "scheduled"].includes(status)) {
+    redirect(`/admin/collections/${collectionId}?status=invalid`);
+  }
+
+  let values: Record<string, unknown>;
+  try {
+    values = JSON.parse(valuesRaw) as Record<string, unknown>;
+  } catch {
+    redirect(`/admin/collections/${collectionId}?status=invalid`);
+  }
+
+  await saveCollectionEntry({
+    collectionId,
+    entryId,
+    slug,
+    status,
+    publishedAt: publishedAtRaw || null,
+    values,
+    updatedBy: userId,
+  });
+
+  revalidatePath(`/admin/collections/${collectionId}`);
+  redirect(`/admin/collections/${collectionId}?status=saved`);
+}
+
+export async function neDeleteCollectionEntryAction(formData: FormData) {
+  const { isAdmin } = await requireEditor();
+  if (!isAdmin) redirect("/admin");
+
+  const collectionId = String(formData.get("collectionId") ?? "").trim();
+  const entryId = String(formData.get("entryId") ?? "").trim();
+
+  if (!collectionId || !entryId) redirect("/admin");
+
+  await deleteCollectionEntry(collectionId, entryId);
+  revalidatePath(`/admin/collections/${collectionId}`);
+  redirect(`/admin/collections/${collectionId}?status=deleted`);
+}

@@ -1,46 +1,382 @@
 # next-editor
 
-Installable editing package for custom Next.js sites.
+A lightweight, code-first CMS layer for custom Next.js sites. Define editable fields directly in your page code, give editors a floating control bar and sidebar to make changes on the live site, and ship with built-in auth, admin, and content handlers.
 
-## Public API
+There is no hosted service, no visual page builder, and no database vendor lock-in. Your page structure stays in code. Editors change a controlled set of fields without touching anything else.
 
-- `definePage`
-- `text`, `textarea`, `image`, `select`, `toggle`
-- `next-editor/client` for client-side editing components
-- `next-editor/rich-text` for the Lexxy editor
-- `next-editor/b2` for B2 upload helpers
+---
 
-## Rich Text
+## How it works
 
-Import the bundled Lexxy styles once from your app root:
+1. You **define a page schema** — a list of sections and fields (text, image, toggle, select, textarea) that describe what editors can change.
+2. You **wrap your page** with `EditorProvider` and mark individual elements with `EditableText` or `EditableImage`. Those elements show an "Edit" button in edit mode and scroll the sidebar to the right field.
+3. You mount the built-in auth, admin, and handler routes in your app.
+4. When an editor clicks **Save**, the package POSTs the updated values to the built-in content handler and persists them in Postgres.
+5. The page re-renders with the new values on the next load.
+
+---
+
+## Installation
+
+```bash
+npm install next-editor
+```
+
+The package requires Next.js ≥ 15 and React ≥ 19 as peer dependencies, which your app already provides.
+
+Import the Lexxy rich-text styles once in your root layout (required even if you don't use the rich-text editor — it scopes the editor UI styles):
+
+```tsx
+// app/layout.tsx
+import "next-editor/lexxy.css";
+```
+
+---
+
+## Getting started
+
+### 1. Define your content model
+
+Pages are a built-in content type in NextEditor. Define them in one place and export a config the
+admin can consume. Collections are optional and let you extend the CMS beyond static pages.
+
+```ts
+// lib/editor-config.ts
+import {
+  dateTime,
+  defineCollection,
+  defineConfig,
+  definePage,
+  embed,
+  image,
+  repeater,
+  richText,
+  select,
+  text,
+  textarea,
+  toggle,
+} from "next-editor";
+
+export const homePage = definePage({
+  id: "home",
+  label: "Home Page",
+  path: "/",
+  sections: [
+    {
+      id: "hero",
+      label: "Hero",
+      fields: [
+        text({ id: "hero.heading", label: "Heading" }),
+        textarea({ id: "hero.subheading", label: "Subheading" }),
+        image({ id: "hero.image", label: "Hero image" }),
+        select({
+          id: "hero.theme",
+          label: "Theme",
+          options: [
+            { label: "Light", value: "light" },
+            { label: "Dark", value: "dark" },
+          ],
+        }),
+      ],
+    },
+  ],
+});
+
+export const nextEditorConfig = defineConfig({
+  pages: [homePage],
+  collections: [
+    defineCollection({
+      id: "posts",
+      label: "Posts",
+      singularLabel: "Post",
+      path: "/blog",
+      useAsTitle: "title",
+      sections: [
+        {
+          id: "content",
+          label: "Content",
+          fields: [
+            text({ id: "title", label: "Title" }),
+            textarea({ id: "excerpt", label: "Excerpt" }),
+            image({ id: "thumbnail", label: "Thumbnail" }),
+            richText({ id: "body", label: "Body" }),
+          ],
+        },
+      ],
+    }),
+    defineCollection({
+      id: "events",
+      label: "Events",
+      singularLabel: "Event",
+      path: "/events",
+      useAsTitle: "title",
+      sections: [
+        {
+          id: "details",
+          label: "Details",
+          fields: [
+            text({ id: "title", label: "Title" }),
+            dateTime({ id: "startAt", label: "Start date & time" }),
+            dateTime({ id: "endAt", label: "End date & time" }),
+            richText({ id: "description", label: "Description" }),
+            image({ id: "thumbnail", label: "Thumbnail" }),
+            repeater({
+              id: "agenda",
+              label: "Agenda items",
+              fields: [
+                text({ id: "title", label: "Item title" }),
+                textarea({ id: "notes", label: "Notes" }),
+              ],
+            }),
+            embed({ id: "embedCode", label: "Embed code" }),
+          ],
+        },
+      ],
+    }),
+  ],
+});
+```
+
+`definePage` automatically appends an SEO section (meta title, description, Open Graph, Twitter card fields) unless you pass `includeSeoSection: false`.
+
+Every collection automatically gets publication controls in admin:
+
+- `status`: `draft`, `published`, or `scheduled`
+- `slug`: optional per-entry slug
+- `publishedAt`: publish/schedule date and time
+
+Collections do not require a `title` field. If you want a specific field to be used as the admin label, set `useAsTitle`.
+
+---
+
+### 2. Mount the package routes
+
+```ts
+// app/api/auth/[...nextauth]/route.ts
+export { GET, POST } from "next-editor/auth";
+```
+
+```ts
+// app/admin/[[...slug]]/page.tsx
+import { createAdminPage } from "next-editor/admin";
+import { nextEditorConfig } from "@/lib/editor-config";
+
+export default createAdminPage(nextEditorConfig);
+```
+
+```ts
+// app/api/ne/[...path]/route.ts
+export { GET, POST } from "next-editor/handlers";
+```
+
+`next-editor` creates its `ne_users` and `ne_content` tables automatically on first run. Visit `/admin` and the package will show `/admin/setup` when no users exist yet.
+
+---
+
+### 3. Load content and wrap the page
+
+Load stored content values server-side and pass them to `EditorProvider`. The provider makes them available to all editable components on the page.
+
+```tsx
+// app/page.tsx
+import { EditorProvider, EditorSidebar, EditorViewport, FloatingAdminBar } from "next-editor/client";
+import { canEdit, getPageContent } from "next-editor/server";
+import { homePage } from "@/lib/editor-config";
+
+export default async function HomePage() {
+  const [values, isEditor] = await Promise.all([
+    getPageContent("home"),
+    canEdit(),
+  ]);
+
+  return (
+    <EditorProvider
+      page={homePage}
+      initialValues={values}
+      canEdit={isEditor}
+      saveUrl="/api/ne/content"
+      imageUploadUrl="/api/ne/upload"
+      adminHref="/admin"
+    >
+      {isEditor ? <EditorSidebar /> : null}
+      {isEditor ? <FloatingAdminBar /> : null}
+      <EditorViewport>
+        <YourPageContent />
+      </EditorViewport>
+    </EditorProvider>
+  );
+}
+```
+
+`EditorViewport` shifts the page content right when the sidebar opens. `FloatingAdminBar` renders the "Edit" / "Admin" floating button in the corner.
+
+---
+
+### 4. Mark editable elements
+
+Use `EditableText` and `EditableImage` in your client components. They read the current field value from context and show an "Edit" chip in edit mode that focuses the matching sidebar field.
+
+```tsx
+"use client";
+
+import { EditableText, EditableImage, useEditor } from "next-editor/client";
+
+export function HeroSection() {
+  const { getFieldValue } = useEditor();
+  const theme = getFieldValue<string>("hero.theme") ?? "light";
+
+  return (
+    <section className={theme === "dark" ? "bg-zinc-900" : "bg-white"}>
+      <EditableText
+        fieldId="hero.heading"
+        as="h1"
+        className="text-5xl font-bold"
+      />
+      <EditableText
+        fieldId="hero.subheading"
+        as="p"
+        className="text-lg text-zinc-600"
+      />
+      <EditableImage
+        fieldId="hero.image"
+        alt="Hero image"
+        className="h-[480px] w-full"
+      />
+    </section>
+  );
+}
+```
+
+`EditableText` accepts an `as` prop for any HTML element or component. `EditableImage` renders a full-bleed `<img>` with object-fit cover inside the region.
+
+Use `EditableRegion` to wrap arbitrary content that maps to a field without rendering a specific element:
+
+```tsx
+import { EditableRegion } from "next-editor/client";
+
+<EditableRegion fieldId="hero.heading">
+  <h1 className="text-5xl font-bold">{value}</h1>
+</EditableRegion>
+```
+
+---
+
+### 5. Use the built-in content + upload handler
+
+The route above handles both `saveUrl="/api/ne/content"` and `imageUploadUrl="/api/ne/upload"`. It checks editor auth, reads and writes page content, and optionally uploads images to Backblaze B2 when configured.
+
+### 6. Query collection entries on the frontend
+
+Use the package server helpers from your own pages and routes:
+
+```ts
+import {
+  getCollectionEntryById,
+  getPublishedEntryBySlug,
+  listCollectionEntries,
+  listPublishedEntries,
+} from "next-editor/server";
+
+const allPosts = await listPublishedEntries("posts");
+const event = await getPublishedEntryBySlug("events", slug);
+const adminRows = await listCollectionEntries("posts");
+const draft = await getCollectionEntryById("posts", entryId);
+```
+
+---
+
+## Image uploads
+
+When `imageUploadUrl` is set on `EditorProvider`, the image field in the sidebar shows a drag-and-drop zone and a click-to-select file picker instead of a plain URL input. A URL paste fallback is always shown below the drop zone.
+
+### Backblaze B2
+
+The package upload handler uses the built-in B2 helper automatically when these variables are present.
+
+Set these environment variables in your `.env.local`:
+
+```bash
+B2_ENDPOINT=https://s3.us-west-002.backblazeb2.com
+B2_REGION=us-west-002
+B2_BUCKET_NAME=your-bucket-name
+B2_APPLICATION_KEY_ID=your-key-id
+B2_APPLICATION_KEY=your-application-key
+B2_PUBLIC_BASE_URL=https://your-bucket.s3.us-west-002.backblazeb2.com
+```
+
+Find these values in the Backblaze B2 console under **App Keys** and **Buckets**. `B2_PUBLIC_BASE_URL` is the base URL used to construct public image URLs after upload.
+
+---
+
+## Rich text editor
+
+The package includes a rich text editor built on [Lexxy](https://github.com/37signals/lexxy). It is exported from a separate entry point to keep the main bundle light.
+
+```tsx
+import { RichTextEditor } from "next-editor/rich-text";
+
+<RichTextEditor
+  name="body"           // hidden input name for form submission
+  initialValue={html}   // HTML string
+  uploadUrl="/api/ne/upload"  // optional image upload endpoint
+/>
+```
+
+The editor loads Lexxy asynchronously — it shows a placeholder until ready. Style the shell with the CSS classes:
+
+| Class | Purpose |
+|---|---|
+| `shellClassName` | Outermost wrapper div |
+| `editorClassName` | The `<lexxy-editor>` element |
+| `loadingClassName` | Placeholder shown while loading |
+| `statusClassName` | Upload status / error message |
+
+Import the bundled Lexxy styles in your root layout (already required above):
 
 ```tsx
 import "next-editor/lexxy.css";
 ```
 
-Use the editor from the package:
+---
 
-```tsx
-import { RichTextEditor } from "next-editor/rich-text";
-```
+## Environment variables
 
-Import inline editing components from the client entrypoint:
+| Variable | Required | Description |
+|---|---|---|
+| `AUTH_SECRET` | Yes | Secret used to sign NextAuth JWTs. Generate with `openssl rand -base64 32`. |
+| `DATABASE_URL` | Yes | Postgres connection string. Works with Neon, Supabase, Railway, or any Postgres 13+. |
+| `B2_ENDPOINT` | No | Backblaze B2 S3-compatible endpoint URL. |
+| `B2_REGION` | No | B2 region (e.g. `us-west-002`). |
+| `B2_BUCKET_NAME` | No | Name of your B2 bucket. |
+| `B2_APPLICATION_KEY_ID` | No | B2 application key ID. |
+| `B2_APPLICATION_KEY` | No | B2 application key secret. |
+| `B2_PUBLIC_BASE_URL` | No | Base URL for constructing public image URLs after upload. |
 
-```tsx
-import { EditorProvider, EditableText } from "next-editor/client";
-```
+B2 variables are only required if you use the `uploadImageToB2` helper. Image fields fall back to a plain URL input when they are not set.
 
-By default the editor posts images to `/api/uploads/image`. If you want a
-different endpoint, pass `uploadUrl`, or pass a custom `uploadImage` callback.
+---
 
-## Backblaze B2
+## Package exports
 
-Server-side B2 helpers are exported from:
+| Import path | Contents |
+|---|---|
+| `next-editor` | `definePage`, `defineCollection`, `defineConfig`, field builders (`text`, `textarea`, `image`, `select`, `toggle`, `slug`, `dateTime`, `richText`, `embed`, `repeater`), and TypeScript types |
+| `next-editor/client` | `EditorProvider`, `EditorSidebar`, `EditorViewport`, `FloatingAdminBar`, `EditableText`, `EditableImage`, `EditableRegion`, `useEditor` |
+| `next-editor/server` | `getSession`, `canEdit`, `getPageContent`, collection read helpers |
+| `next-editor/auth` | NextAuth route handlers plus auth helpers |
+| `next-editor/admin` | `createAdminPage(...)` plus the built-in admin page |
+| `next-editor/handlers` | Built-in `/api/ne/content` and `/api/ne/upload` handlers |
+| `next-editor/rich-text` | `RichTextEditor`, `uploadEditorImage` |
+| `next-editor/b2` | `uploadImageToB2`, `hasB2Config`, `getB2Config` |
+| `next-editor/lexxy.css` | Bundled Lexxy and editor UI styles |
 
-```ts
-import { hasB2Config, uploadImageToB2 } from "next-editor/b2";
-```
+---
 
-The host app still owns routes, auth, persistence, and page-level content
-loading. The package owns the editor implementation and its required runtime
-dependencies.
+## Auth
+
+The package ships with built-in auth and admin flows. Mount `next-editor/auth` and `next-editor/admin`, set `AUTH_SECRET` and `DATABASE_URL`, then visit `/admin` to create the first admin account.
+
+Roles:
+
+- `admin`: can edit content and manage users
+- `editor`: can edit content but cannot manage users

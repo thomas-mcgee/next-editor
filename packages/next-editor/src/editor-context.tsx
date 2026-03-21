@@ -18,6 +18,7 @@ export function EditorProvider({
   page,
   initialValues,
   saveUrl,
+  imageUploadUrl,
   canEdit,
   adminHref = "/admin",
   children,
@@ -165,6 +166,7 @@ export function EditorProvider({
       activeFieldId,
       isDirty,
       adminHref,
+      imageUploadUrl,
       enterEditMode,
       attemptExitEditMode,
       setFieldValue,
@@ -177,6 +179,7 @@ export function EditorProvider({
     [
       activeFieldId,
       adminHref,
+      imageUploadUrl,
       attemptExitEditMode,
       canEdit,
       enterEditMode,

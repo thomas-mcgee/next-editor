@@ -9,7 +9,7 @@ export function SiteHeader() {
       <nav className="flex items-center gap-6 text-sm text-zinc-600">
         <Link href="/">Home</Link>
         <Link href="/about">About</Link>
-        <Link href="/login">Login</Link>
+        <Link href="/admin/login">Login</Link>
       </nav>
     </header>
   );

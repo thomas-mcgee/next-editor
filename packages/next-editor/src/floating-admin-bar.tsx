@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useEditor } from "./editor-context";
+import { useEditorThemeVars } from "./editor-theme";
 
 export function FloatingAdminBar() {
   const {
@@ -13,6 +14,7 @@ export function FloatingAdminBar() {
     saveChanges,
   } = useEditor();
   const [error, setError] = useState<string>();
+  const themeVars = useEditorThemeVars();
 
   if (!canEdit) {
     return null;
@@ -36,6 +38,7 @@ export function FloatingAdminBar() {
   return (
     <div
       style={{
+        ...themeVars,
         position: "fixed",
         right: 24,
         bottom: 24,

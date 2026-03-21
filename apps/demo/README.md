@@ -1,30 +1,48 @@
-This app is the local consumer for the `next-editor` package. It should use the
-same package surface that downstream projects will use.
+# next-editor demo
 
-## Getting Started
+The demo app exercises the `next-editor` package against a real Next.js app. It uses the same public API a downstream project would use — no internal shortcuts.
+
+## Setup
+
+### 1. Environment variables
+
+Copy the example file and fill in your values:
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | Postgres connection string (Neon, Supabase, Railway, local, etc.) |
+| `AUTH_SECRET` | Yes | Random secret for NextAuth JWTs — `openssl rand -base64 32` |
+| `B2_ENDPOINT` | No | Backblaze B2 S3 endpoint URL |
+| `B2_REGION` | No | B2 region (e.g. `us-west-002`) |
+| `B2_BUCKET_NAME` | No | B2 bucket name |
+| `B2_APPLICATION_KEY_ID` | No | B2 app key ID |
+| `B2_APPLICATION_KEY` | No | B2 app key secret |
+| `B2_PUBLIC_BASE_URL` | No | Public base URL for uploaded images |
+
+B2 variables are optional — image fields show a URL input fallback when they are not set.
+
+### 2. Database
+
+No migration or seed step is required for auth/admin setup. `next-editor` creates its `ne_users` and `ne_content` tables automatically on first run.
+
+### 3. Build the package
+
+The demo imports `next-editor` via a local `file:` reference. Build it before starting the dev server:
+
+```bash
+npm run build --workspace=next-editor
+```
+
+### 4. Start
 
 From the repo root:
 
 ```bash
-npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## Backblaze B2 image uploads
-
-Set these environment variables to enable image uploads from the packaged Lexxy
-editor:
-
-```bash
-B2_ENDPOINT=https://s3.<region>.backblazeb2.com
-B2_REGION=<region>
-B2_BUCKET_NAME=<bucket-name>
-B2_APPLICATION_KEY_ID=<application-key-id>
-B2_APPLICATION_KEY=<application-key>
-B2_PUBLIC_BASE_URL=https://f000.backblazeb2.com/file/<bucket-name>
-```
-
-`B2_PUBLIC_BASE_URL` should be the public base URL for the bucket, because the
-upload route returns `${B2_PUBLIC_BASE_URL}/${object-key}` after each upload.
+Open [http://localhost:3000/admin](http://localhost:3000/admin). On first run, the package will show `/admin/setup` so you can create the first administrator account.

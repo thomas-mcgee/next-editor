@@ -5,7 +5,12 @@ export type PrimitiveFieldType =
   | "textarea"
   | "image"
   | "select"
-  | "toggle";
+  | "toggle"
+  | "slug"
+  | "dateTime"
+  | "richtext"
+  | "embed"
+  | "repeater";
 
 export type FieldOption = {
   label: string;
@@ -21,7 +26,7 @@ export type BaseFieldDefinition = {
 };
 
 export type TextFieldDefinition = BaseFieldDefinition & {
-  type: "text" | "textarea" | "image";
+  type: "text" | "textarea" | "image" | "slug" | "dateTime" | "richtext" | "embed";
 };
 
 export type ToggleFieldDefinition = BaseFieldDefinition & {
@@ -33,10 +38,21 @@ export type SelectFieldDefinition = BaseFieldDefinition & {
   options: FieldOption[];
 };
 
+export type RepeaterFieldDefinition = BaseFieldDefinition & {
+  type: "repeater";
+  fields: CollectionFieldDefinition[];
+};
+
 export type FieldDefinition =
   | TextFieldDefinition
   | ToggleFieldDefinition
   | SelectFieldDefinition;
+
+export type CollectionFieldDefinition =
+  | TextFieldDefinition
+  | ToggleFieldDefinition
+  | SelectFieldDefinition
+  | RepeaterFieldDefinition;
 
 export type PageSectionDefinition = {
   id: string;
@@ -47,7 +63,42 @@ export type PageSectionDefinition = {
 export type PageDefinition = {
   id: string;
   label: string;
+  path: string;
+  description?: string;
   sections: PageSectionDefinition[];
+};
+
+export type CollectionDefinition = {
+  id: string;
+  label: string;
+  singularLabel?: string;
+  path?: string;
+  description?: string;
+  useAsTitle?: string;
+  sections: Array<{
+    id: string;
+    label: string;
+    fields: CollectionFieldDefinition[];
+  }>;
+};
+
+export type NextEditorConfig = {
+  pages: PageDefinition[];
+  collections?: CollectionDefinition[];
+};
+
+export type CollectionStatus = "draft" | "published" | "scheduled";
+
+export type CollectionEntryRecord = {
+  collectionId: string;
+  entryId: string;
+  slug: string | null;
+  status: CollectionStatus;
+  publishedAt: string | null;
+  values: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  updatedBy: string | null;
 };
 
 export type EditorPageValues = Record<string, unknown>;
@@ -61,6 +112,7 @@ export type EditorProviderProps = {
   page: PageDefinition;
   initialValues: EditorPageValues;
   saveUrl: string;
+  imageUploadUrl?: string;
   canEdit: boolean;
   adminHref?: string;
   children: ReactNode;
@@ -104,6 +156,7 @@ export type EditorState = {
   activeFieldId?: string;
   isDirty: boolean;
   adminHref: string;
+  imageUploadUrl?: string;
   enterEditMode: () => void;
   attemptExitEditMode: () => boolean;
   setFieldValue: (fieldId: string, value: unknown) => void;

@@ -1,12 +1,157 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, DragEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useEditor } from "./editor-context";
+import { useEditorThemeVars } from "./editor-theme";
 import type { FieldDefinition } from "./types";
 
+function ImageUploadControl({
+  fieldId,
+  currentValue,
+  uploadUrl,
+}: {
+  fieldId: string;
+  currentValue: string;
+  uploadUrl: string | undefined;
+}) {
+  const { setFieldValue } = useEditor();
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setError("Only image files are supported.");
+      return;
+    }
+    if (!uploadUrl) {
+      setError("No upload URL configured.");
+      return;
+    }
+    setIsUploading(true);
+    setError(undefined);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(uploadUrl, { method: "POST", body: formData });
+      const result = (await response.json()) as { ok: boolean; url?: string; error?: string };
+      if (!response.ok || !result.ok || !result.url) {
+        setError(result.error ?? "Upload failed.");
+        return;
+      }
+      setFieldValue(fieldId, result.url);
+    } catch {
+      setError("Upload failed. Check your connection.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer?.files[0];
+    if (file) void handleFile(file);
+  };
+
+  const dropZoneStyle: CSSProperties = {
+    border: `2px dashed ${isDragging ? "var(--foreground, #18181b)" : "var(--border-strong, #d4d4d8)"}`,
+    borderRadius: 10,
+    padding: "20px 12px",
+    textAlign: "center",
+    cursor: uploadUrl ? "pointer" : "default",
+    background: isDragging ? "var(--surface-muted, #f4f4f5)" : "var(--surface, #ffffff)",
+    transition: "border-color 150ms ease, background 150ms ease",
+    position: "relative",
+    overflow: "hidden",
+  };
+
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      {currentValue ? (
+        <div style={{ position: "relative", borderRadius: 8, overflow: "hidden", height: 120 }}>
+          <img
+            src={currentValue}
+            alt="Current image"
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
+          <button
+            type="button"
+            onClick={() => setFieldValue(fieldId, "")}
+            style={{
+              position: "absolute",
+              top: 6,
+              right: 6,
+              border: "1px solid rgba(255,255,255,0.5)",
+              borderRadius: 6,
+              background: "rgba(0,0,0,0.55)",
+              color: "#fff",
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "3px 8px",
+              cursor: "pointer",
+            }}
+          >
+            Remove
+          </button>
+        </div>
+      ) : null}
+
+      <div
+        style={dropZoneStyle}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        onClick={() => uploadUrl && fileInputRef.current?.click()}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleFile(file);
+            e.target.value = "";
+          }}
+        />
+        {isUploading ? (
+          <p style={{ fontSize: 13, color: "var(--muted, #71717a)", margin: 0 }}>Uploading…</p>
+        ) : uploadUrl ? (
+          <>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground, #18181b)", margin: "0 0 2px" }}>
+              Drop an image or click to select
+            </p>
+            <p style={{ fontSize: 11, color: "var(--muted, #71717a)", margin: 0 }}>
+              JPG, PNG, WebP, GIF, AVIF
+            </p>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "var(--muted, #71717a)", margin: 0 }}>
+            No upload URL configured — use the URL field below.
+          </p>
+        )}
+      </div>
+
+      {error ? (
+        <p style={{ fontSize: 12, color: "#dc2626", margin: 0 }}>{error}</p>
+      ) : null}
+
+      <input
+        type="text"
+        value={String(currentValue ?? "")}
+        onChange={(e) => setFieldValue(fieldId, e.target.value)}
+        placeholder="Or paste an image URL…"
+        style={inputStyle()}
+      />
+    </div>
+  );
+}
+
 function FieldControl({ field }: { field: FieldDefinition }) {
-  const { activeFieldId, getFieldValue, registerFieldRef, setFieldValue } =
+  const { activeFieldId, getFieldValue, imageUploadUrl, registerFieldRef, setFieldValue } =
     useEditor();
   const ref = useRef<HTMLDivElement>(null);
   const currentValue = getFieldValue(field.id);
@@ -83,12 +228,28 @@ function FieldControl({ field }: { field: FieldDefinition }) {
         />
       ) : null}
 
-      {field.type === "text" || field.type === "image" ? (
+      {field.type === "richtext" || field.type === "embed" ? (
+        <textarea
+          value={String(currentValue ?? "")}
+          onChange={(event) => setFieldValue(field.id, event.target.value)}
+          style={inputStyle({ minHeight: 160 })}
+        />
+      ) : null}
+
+      {field.type === "text" || field.type === "slug" || field.type === "dateTime" ? (
         <input
-          type="text"
+          type={field.type === "dateTime" ? "datetime-local" : "text"}
           value={String(currentValue ?? "")}
           onChange={(event) => setFieldValue(field.id, event.target.value)}
           style={inputStyle()}
+        />
+      ) : null}
+
+      {field.type === "image" ? (
+        <ImageUploadControl
+          fieldId={field.id}
+          currentValue={String(currentValue ?? "")}
+          uploadUrl={imageUploadUrl}
         />
       ) : null}
 
@@ -145,6 +306,7 @@ export function EditorSidebar() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(page.sections.map((section) => [section.id, false])),
   );
+  const themeVars = useEditorThemeVars();
 
   useEffect(() => {
     setOpenSections(
@@ -184,6 +346,7 @@ export function EditorSidebar() {
   return (
     <aside
       style={{
+        ...themeVars,
         position: "fixed",
         left: 0,
         top: 0,

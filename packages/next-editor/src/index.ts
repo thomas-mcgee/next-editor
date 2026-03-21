@@ -1,8 +1,27 @@
-export { definePage, image, select, text, textarea, toggle } from "./config";
+export {
+  dateTime,
+  defineCollection,
+  defineConfig,
+  definePage,
+  embed,
+  image,
+  repeater,
+  richText,
+  select,
+  slug,
+  text,
+  textarea,
+  toggle,
+} from "./config";
 export type {
+  CollectionDefinition,
+  CollectionEntryRecord,
+  CollectionFieldDefinition,
+  CollectionStatus,
   EditorPageValues,
   EditorViewportProps,
   FieldDefinition,
+  NextEditorConfig,
   PageDefinition,
   PageSectionDefinition,
   SaveResult,

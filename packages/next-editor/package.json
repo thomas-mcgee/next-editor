@@ -1,7 +1,7 @@
 {
   "name": "next-editor",
   "version": "0.1.0",
-  "description": "Minimal inline editing layer for custom Next.js sites.",
+  "description": "Drop-in CMS layer for custom Next.js sites.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -12,23 +12,46 @@
       "require": "./dist/index.js",
       "default": "./dist/index.mjs"
     },
-    "./b2": {
-      "types": "./dist/b2.d.ts",
-      "import": "./dist/b2.mjs",
-      "require": "./dist/b2.js",
-      "default": "./dist/b2.mjs"
-    },
     "./client": {
       "types": "./dist/client.d.ts",
       "import": "./dist/client.mjs",
       "require": "./dist/client.js",
       "default": "./dist/client.mjs"
     },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.js",
+      "default": "./dist/server.mjs"
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "import": "./dist/auth/index.mjs",
+      "require": "./dist/auth/index.js",
+      "default": "./dist/auth/index.mjs"
+    },
+    "./admin": {
+      "types": "./dist/admin/index.d.ts",
+      "import": "./dist/admin/index.mjs",
+      "default": "./dist/admin/index.mjs"
+    },
+    "./handlers": {
+      "types": "./dist/handlers/index.d.ts",
+      "import": "./dist/handlers/index.mjs",
+      "require": "./dist/handlers/index.js",
+      "default": "./dist/handlers/index.mjs"
+    },
     "./rich-text": {
       "types": "./dist/rich-text-editor.d.ts",
       "import": "./dist/rich-text-editor.mjs",
       "require": "./dist/rich-text-editor.js",
       "default": "./dist/rich-text-editor.mjs"
+    },
+    "./b2": {
+      "types": "./dist/b2.d.ts",
+      "import": "./dist/b2.mjs",
+      "require": "./dist/b2.js",
+      "default": "./dist/b2.mjs"
     },
     "./lexxy.css": "./styles/lexxy.css"
   },
@@ -41,13 +64,16 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/client.ts src/b2.ts src/rich-text-editor.tsx --format esm,cjs --dts",
+    "build": "rm -rf dist && tsup",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@37signals/lexxy": "^0.8.5-beta",
+    "@37signals/lexxy": "^0.9.0-beta",
+    "@aws-sdk/client-s3": "^3.1012.0",
     "@rails/activestorage": "^8.1.200",
-    "@aws-sdk/client-s3": "^3.1012.0"
+    "bcryptjs": "^3.0.3",
+    "next-auth": "^5.0.0-beta.30",
+    "pg": "^8.20.0"
   },
   "peerDependencies": {
     "next": ">=15",
@@ -55,9 +81,11 @@
     "react-dom": ">=19"
   },
   "devDependencies": {
-    "next": "^16.1.6",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "next": "^16.2.1",
     "tsup": "^8.4.0",
     "typescript": "^5.0.0"
   }
