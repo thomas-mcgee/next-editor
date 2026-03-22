@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "collectionId": "replace-with-collection-id",
+  "entries": [
+    {
+      "entryId": "replace-with-entry-id",
+      "slug": null,
+      "status": "draft",
+      "publishedAt": null,
+      "values": {}
+    }
+  ]
+}

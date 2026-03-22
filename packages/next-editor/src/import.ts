@@ -1,5 +1,13 @@
 import { readFile } from "node:fs/promises";
-import type { NextEditorConfig, PageDefinition, FieldDefinition } from "./types";
+import type {
+  CollectionDefinition,
+  CollectionFieldDefinition,
+  CollectionStatus,
+  FieldDefinition,
+  NextEditorConfig,
+  PageDefinition,
+} from "./types";
+import { getCollectionEntry, saveCollectionEntry } from "./content/collection-store";
 import { readPageContent, setPageContent } from "./content/store";
 import { getValueAtPath, setValueAtPath } from "./utils";
 
@@ -14,8 +22,37 @@ export type PageImportPage = {
   values: Record<string, unknown>;
 };
 
+export type CollectionImportDocument = {
+  version: 1;
+  collectionId: string;
+  entries: CollectionImportEntry[];
+};
+
+export type CollectionImportEntry = {
+  entryId: string;
+  slug?: string | null;
+  status?: CollectionStatus;
+  publishedAt?: string | null;
+  values: Record<string, unknown>;
+};
+
+type NormalizedCollectionImportEntry = CollectionImportEntry & {
+  hasSlug: boolean;
+  hasStatus: boolean;
+  hasPublishedAt: boolean;
+};
+
 export type CreatePageImportTemplateOptions = {
   includePagePath?: boolean;
+};
+
+export type CreateCollectionImportTemplateOptions = {
+  entries?: Array<{
+    entryId: string;
+    slug?: string | null;
+    status?: CollectionStatus;
+    publishedAt?: string | null;
+  }>;
 };
 
 export type ValidatePageImportOptions = {
@@ -25,16 +62,37 @@ export type ValidatePageImportOptions = {
   allowPartialFields?: boolean;
 };
 
+export type ValidateCollectionImportOptions = {
+  config: NextEditorConfig;
+  document: CollectionImportDocument;
+  allowPartialFields?: boolean;
+};
+
 export type ImportPagesOptions = ValidatePageImportOptions & {
   mode?: "replace" | "merge";
+};
+
+export type ImportCollectionOptions = ValidateCollectionImportOptions & {
+  mode?: "replace" | "merge";
+  updatedBy?: string | null;
 };
 
 export type ImportPagesFromFileOptions = Omit<ImportPagesOptions, "document"> & {
   filePath: string;
 };
 
+export type ImportCollectionFromFileOptions = Omit<ImportCollectionOptions, "document"> & {
+  filePath: string;
+};
+
 export type ImportPagesResult = {
   importedPageIds: string[];
+  mode: "replace" | "merge";
+};
+
+export type ImportCollectionResult = {
+  collectionId: string;
+  importedEntryIds: string[];
   mode: "replace" | "merge";
 };
 
@@ -47,7 +105,31 @@ export function createPageImportTemplate(
     pages: config.pages.map((page) => ({
       pageId: page.id,
       ...(options.includePagePath === false ? {} : { path: page.path }),
-      values: buildTemplateValues(page),
+      values: buildPageTemplateValues(page),
+    })),
+  };
+}
+
+export function createCollectionImportTemplate(
+  config: NextEditorConfig,
+  collectionId: string,
+  options: CreateCollectionImportTemplateOptions = {},
+): CollectionImportDocument {
+  const collection = getCollectionDefinition(config, collectionId);
+  const entries =
+    options.entries && options.entries.length > 0
+      ? options.entries
+      : [{ entryId: `${collection.id}-entry-1`, status: "draft" as const, publishedAt: null }];
+
+  return {
+    version: 1,
+    collectionId: collection.id,
+    entries: entries.map((entry) => ({
+      entryId: entry.entryId,
+      slug: entry.slug ?? null,
+      status: entry.status ?? "draft",
+      publishedAt: entry.publishedAt ?? null,
+      values: buildCollectionTemplateValues(collection),
     })),
   };
 }
@@ -62,15 +144,16 @@ export function validatePageImportDocument(
     errors.push(`Unsupported import version "${String(document.version)}". Expected "1".`);
   }
 
+  const rawPages = Array.isArray(document.pages) ? document.pages : [];
   if (!Array.isArray(document.pages)) {
-    errors.push("Import document must include a \"pages\" array.");
+    errors.push('Import document must include a "pages" array.');
   }
 
   const pageMap = new Map(config.pages.map((page) => [page.id, page]));
   const seenPageIds = new Set<string>();
   const normalizedPages: PageImportPage[] = [];
 
-  for (const page of document.pages ?? []) {
+  for (const page of rawPages) {
     if (!isPlainObject(page)) {
       errors.push("Each page import entry must be an object.");
       continue;
@@ -78,7 +161,7 @@ export function validatePageImportDocument(
 
     const pageId = typeof page.pageId === "string" ? page.pageId : "";
     if (!pageId) {
-      errors.push("Each page import entry must include a non-empty \"pageId\".");
+      errors.push('Each page import entry must include a non-empty "pageId".');
       continue;
     }
 
@@ -127,12 +210,124 @@ export function validatePageImportDocument(
   }
 
   if (errors.length > 0) {
-    throw new Error(formatImportErrors(errors));
+    throw new Error(formatImportErrors("Page import", errors));
   }
 
   return {
     version: 1,
     pages: normalizedPages,
+  };
+}
+
+export function validateCollectionImportDocument(
+  options: ValidateCollectionImportOptions,
+): CollectionImportDocument {
+  const { config, document, allowPartialFields = false } = options;
+  const errors: string[] = [];
+
+  if (document.version !== 1) {
+    errors.push(`Unsupported import version "${String(document.version)}". Expected "1".`);
+  }
+
+  const collectionId = typeof document.collectionId === "string" ? document.collectionId : "";
+  if (!collectionId) {
+    errors.push('Import document must include a non-empty "collectionId".');
+  }
+
+  const collection = collectionId ? findCollectionDefinition(config, collectionId) : null;
+  if (collectionId && !collection) {
+    errors.push(`Collection "${collectionId}" is not registered in the provided NextEditor config.`);
+  }
+
+  const rawEntries = Array.isArray(document.entries) ? document.entries : [];
+  if (!Array.isArray(document.entries)) {
+    errors.push('Import document must include an "entries" array.');
+  }
+
+  const seenEntryIds = new Set<string>();
+  const normalizedEntries: NormalizedCollectionImportEntry[] = [];
+
+  for (const entry of rawEntries) {
+    if (!isPlainObject(entry)) {
+      errors.push("Each collection import entry must be an object.");
+      continue;
+    }
+
+    const entryId = typeof entry.entryId === "string" ? entry.entryId : "";
+    if (!entryId) {
+      errors.push('Each collection import entry must include a non-empty "entryId".');
+      continue;
+    }
+
+    if (seenEntryIds.has(entryId)) {
+      errors.push(`Duplicate collection import entry for "${entryId}".`);
+      continue;
+    }
+    seenEntryIds.add(entryId);
+
+    const hasSlug = Object.prototype.hasOwnProperty.call(entry, "slug");
+    if (hasSlug && entry.slug !== null && typeof entry.slug !== "string") {
+      errors.push(`Collection entry "${entryId}" has an invalid "slug" value.`);
+    }
+
+    const hasStatus = Object.prototype.hasOwnProperty.call(entry, "status");
+    if (
+      hasStatus &&
+      entry.status !== "draft" &&
+      entry.status !== "published" &&
+      entry.status !== "scheduled"
+    ) {
+      errors.push(
+        `Collection entry "${entryId}" has an invalid "status". Expected "draft", "published", or "scheduled".`,
+      );
+    }
+
+    const hasPublishedAt = Object.prototype.hasOwnProperty.call(entry, "publishedAt");
+    if (
+      hasPublishedAt &&
+      entry.publishedAt !== null &&
+      typeof entry.publishedAt !== "string"
+    ) {
+      errors.push(`Collection entry "${entryId}" has an invalid "publishedAt" value.`);
+    }
+
+    if (!isPlainObject(entry.values)) {
+      errors.push(`Collection entry "${entryId}" must include a "values" object.`);
+      continue;
+    }
+
+    if (collection) {
+      errors.push(
+        ...validateCollectionValues(collection, entry.values, {
+          allowPartialFields,
+          entryId,
+        }),
+      );
+    }
+
+    normalizedEntries.push({
+      entryId,
+      slug: hasSlug ? (entry.slug ?? null) : undefined,
+      status: hasStatus ? entry.status : undefined,
+      publishedAt: hasPublishedAt ? (entry.publishedAt ?? null) : undefined,
+      values: entry.values,
+      hasSlug,
+      hasStatus,
+      hasPublishedAt,
+    });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(formatImportErrors("Collection import", errors));
+  }
+
+  return {
+    version: 1,
+    collectionId,
+    entries: normalizedEntries.map(
+      ({ hasPublishedAt: _hasPublishedAt, hasSlug: _hasSlug, hasStatus: _hasStatus, ...entry }) =>
+        entry,
+    ),
   };
 }
 
@@ -142,15 +337,74 @@ export async function importPages(options: ImportPagesOptions): Promise<ImportPa
 
   for (const page of document.pages) {
     const values =
-      mode === "merge"
-        ? mergeObjects(await readPageContent(page.pageId), page.values)
-        : page.values;
+      mode === "merge" ? mergeObjects(await readPageContent(page.pageId), page.values) : page.values;
 
     await setPageContent(page.pageId, values);
   }
 
   return {
     importedPageIds: document.pages.map((page) => page.pageId),
+    mode,
+  };
+}
+
+export async function importCollection(
+  options: ImportCollectionOptions,
+): Promise<ImportCollectionResult> {
+  const { config, mode = "replace", updatedBy = null } = options;
+  const validatedDocument = validateCollectionImportDocument(options);
+  const collection = getCollectionDefinition(config, validatedDocument.collectionId);
+  const rawEntries = Array.isArray(options.document.entries) ? options.document.entries : [];
+  const normalizedEntryMap = new Map<string, NormalizedCollectionImportEntry>();
+
+  for (const entry of rawEntries) {
+    if (!isPlainObject(entry) || typeof entry.entryId !== "string" || !entry.entryId) {
+      continue;
+    }
+
+    normalizedEntryMap.set(entry.entryId, {
+      entryId: entry.entryId,
+      slug: Object.prototype.hasOwnProperty.call(entry, "slug") ? (entry.slug ?? null) : undefined,
+      status: Object.prototype.hasOwnProperty.call(entry, "status") ? entry.status : undefined,
+      publishedAt: Object.prototype.hasOwnProperty.call(entry, "publishedAt")
+        ? (entry.publishedAt ?? null)
+        : undefined,
+      values: validatedDocument.entries.find((candidate) => candidate.entryId === entry.entryId)?.values ?? {},
+      hasSlug: Object.prototype.hasOwnProperty.call(entry, "slug"),
+      hasStatus: Object.prototype.hasOwnProperty.call(entry, "status"),
+      hasPublishedAt: Object.prototype.hasOwnProperty.call(entry, "publishedAt"),
+    });
+  }
+
+  for (const entry of validatedDocument.entries) {
+    const normalizedEntry = normalizedEntryMap.get(entry.entryId);
+    const existing = await getCollectionEntry(collection.id, entry.entryId);
+    const values =
+      mode === "merge" ? mergeObjects(existing?.values ?? {}, entry.values) : entry.values;
+
+    await saveCollectionEntry({
+      collectionId: collection.id,
+      entryId: entry.entryId,
+      slug:
+        normalizedEntry?.hasSlug
+          ? (normalizedEntry.slug ?? null)
+          : (existing?.slug ?? null),
+      status:
+        normalizedEntry?.hasStatus
+          ? (normalizedEntry.status ?? "draft")
+          : (existing?.status ?? "draft"),
+      publishedAt:
+        normalizedEntry?.hasPublishedAt
+          ? (normalizedEntry.publishedAt ?? null)
+          : (existing?.publishedAt ?? null),
+      values,
+      updatedBy,
+    });
+  }
+
+  return {
+    collectionId: collection.id,
+    importedEntryIds: validatedDocument.entries.map((entry) => entry.entryId),
     mode,
   };
 }
@@ -166,16 +420,44 @@ export async function importPagesFromFile(
   });
 }
 
-function buildTemplateValues(page: PageDefinition) {
+export async function importCollectionFromFile(
+  options: ImportCollectionFromFileOptions,
+): Promise<ImportCollectionResult> {
+  const raw = await readFile(options.filePath, "utf8");
+  const parsed = JSON.parse(raw) as CollectionImportDocument;
+  return importCollection({
+    ...options,
+    document: parsed,
+  });
+}
+
+function buildPageTemplateValues(page: PageDefinition) {
   return page.sections.reduce<Record<string, unknown>>((values, section) => {
     for (const field of section.fields) {
-      values = setValueAtPath(values, field.id, getTemplateValue(field));
+      values = setValueAtPath(values, field.id, getPrimitiveTemplateValue(field));
     }
     return values;
   }, {});
 }
 
-function getTemplateValue(field: FieldDefinition) {
+function buildCollectionTemplateValues(collection: CollectionDefinition) {
+  return collection.sections.reduce<Record<string, unknown>>((values, section) => {
+    for (const field of section.fields) {
+      values[field.id] = getCollectionTemplateValue(field);
+    }
+    return values;
+  }, {});
+}
+
+function getCollectionTemplateValue(field: CollectionFieldDefinition): unknown {
+  if (field.type === "repeater") {
+    return [];
+  }
+
+  return getPrimitiveTemplateValue(field);
+}
+
+function getPrimitiveTemplateValue(field: FieldDefinition | CollectionFieldDefinition) {
   if (field.type === "toggle") {
     return false;
   }
@@ -205,7 +487,7 @@ function validatePageValues(
       continue;
     }
 
-    const typeError = validateFieldValue(field, value);
+    const typeError = validatePrimitiveFieldValue(field, value);
     if (typeError) {
       errors.push(`Page "${page.id}" field "${field.id}": ${typeError}`);
     }
@@ -220,7 +502,95 @@ function validatePageValues(
   return errors;
 }
 
-function validateFieldValue(field: FieldDefinition, value: unknown) {
+function validateCollectionValues(
+  collection: CollectionDefinition,
+  values: Record<string, unknown>,
+  options: { allowPartialFields: boolean; entryId: string },
+) {
+  return validateCollectionFieldGroup(collection.sections.flatMap((section) => section.fields), values, {
+    allowPartialFields: options.allowPartialFields,
+    entryId: options.entryId,
+    collectionId: collection.id,
+    prefix: "",
+  });
+}
+
+function validateCollectionFieldGroup(
+  fields: CollectionFieldDefinition[],
+  values: Record<string, unknown>,
+  options: {
+    allowPartialFields: boolean;
+    collectionId: string;
+    entryId: string;
+    prefix: string;
+  },
+) {
+  const errors: string[] = [];
+  const knownFieldIds = new Set(fields.map((field) => field.id));
+
+  for (const field of fields) {
+    const value = values[field.id];
+    const fieldPath = options.prefix ? `${options.prefix}.${field.id}` : field.id;
+
+    if (value === undefined) {
+      if (!options.allowPartialFields) {
+        errors.push(
+          `Collection "${options.collectionId}" entry "${options.entryId}" is missing field "${fieldPath}".`,
+        );
+      }
+      continue;
+    }
+
+    if (field.type === "repeater") {
+      if (!Array.isArray(value)) {
+        errors.push(
+          `Collection "${options.collectionId}" entry "${options.entryId}" field "${fieldPath}": expected an array.`,
+        );
+        continue;
+      }
+
+      value.forEach((item, index) => {
+        if (!isPlainObject(item)) {
+          errors.push(
+            `Collection "${options.collectionId}" entry "${options.entryId}" field "${fieldPath}[${index}]": expected an object.`,
+          );
+          return;
+        }
+
+        errors.push(
+          ...validateCollectionFieldGroup(field.fields, item, {
+            ...options,
+            prefix: `${fieldPath}[${index}]`,
+          }),
+        );
+      });
+      continue;
+    }
+
+    const typeError = validatePrimitiveFieldValue(field, value);
+    if (typeError) {
+      errors.push(
+        `Collection "${options.collectionId}" entry "${options.entryId}" field "${fieldPath}": ${typeError}`,
+      );
+    }
+  }
+
+  for (const key of Object.keys(values)) {
+    if (!knownFieldIds.has(key)) {
+      const unknownPath = options.prefix ? `${options.prefix}.${key}` : key;
+      errors.push(
+        `Collection "${options.collectionId}" entry "${options.entryId}" includes unknown field "${unknownPath}".`,
+      );
+    }
+  }
+
+  return errors;
+}
+
+function validatePrimitiveFieldValue(
+  field: FieldDefinition | Exclude<CollectionFieldDefinition, { type: "repeater" }>,
+  value: unknown,
+) {
   if (field.type === "toggle") {
     return typeof value === "boolean" ? null : "expected a boolean.";
   }
@@ -239,10 +609,7 @@ function validateFieldValue(field: FieldDefinition, value: unknown) {
   return typeof value === "string" ? null : "expected a string.";
 }
 
-function collectLeafPaths(
-  source: Record<string, unknown>,
-  prefix = "",
-): string[] {
+function collectLeafPaths(source: Record<string, unknown>, prefix = ""): string[] {
   const paths: string[] = [];
 
   for (const [key, value] of Object.entries(source)) {
@@ -267,10 +634,7 @@ function mergeObjects(
 
   for (const [key, value] of Object.entries(override)) {
     if (isPlainObject(value) && isPlainObject(next[key])) {
-      next[key] = mergeObjects(
-        next[key] as Record<string, unknown>,
-        value,
-      );
+      next[key] = mergeObjects(next[key] as Record<string, unknown>, value);
       continue;
     }
 
@@ -280,10 +644,22 @@ function mergeObjects(
   return next;
 }
 
+function findCollectionDefinition(config: NextEditorConfig, collectionId: string) {
+  return config.collections?.find((collection) => collection.id === collectionId) ?? null;
+}
+
+function getCollectionDefinition(config: NextEditorConfig, collectionId: string) {
+  const collection = findCollectionDefinition(config, collectionId);
+  if (!collection) {
+    throw new Error(`Collection "${collectionId}" is not registered in the provided NextEditor config.`);
+  }
+  return collection;
+}
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function formatImportErrors(errors: string[]) {
-  return `Page import validation failed:\n${errors.map((error) => `- ${error}`).join("\n")}`;
+function formatImportErrors(label: string, errors: string[]) {
+  return `${label} validation failed:\n${errors.map((error) => `- ${error}`).join("\n")}`;
 }

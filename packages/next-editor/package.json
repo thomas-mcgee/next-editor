@@ -78,6 +78,7 @@
       "default": "./dist/b2.mjs"
     },
     "./templates/pages-import.template.json": "./templates/pages-import.template.json",
+    "./templates/collection-import.template.json": "./templates/collection-import.template.json",
     "./lexxy.css": "./styles/lexxy.css",
     "./styles/*.css": "./styles/*.css"
   },

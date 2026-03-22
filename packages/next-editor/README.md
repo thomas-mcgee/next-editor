@@ -147,9 +147,9 @@ Every collection automatically gets publication controls in admin:
 
 Collections do not require a `title` field. If you want a specific field to be used as the admin label, set `useAsTitle`.
 
-### Page import template and importer
+### Import templates and importers
 
-NextEditor now ships a page-only import helper at `@makeablebrand/next-editor/import`. It validates a JSON document against your registered page definitions, including the auto-generated SEO section, and writes each page payload into `ne_content`.
+NextEditor ships import helpers at `@makeablebrand/next-editor/import` for both page content and custom collections. Page imports validate against your registered page definitions, including the auto-generated SEO section, and write each payload into `ne_content`.
 
 The package also ships a generic reference template at `@makeablebrand/next-editor/templates/pages-import.template.json`, but for a real site you should generate a config-specific template from your own `nextEditorConfig`:
 
@@ -200,15 +200,75 @@ The generated file uses this shape:
 }
 ```
 
-Rules:
+Collection imports use a collection-specific document shape and validate every entry against the target collection's configured fields, including repeaters plus the built-in publication metadata (`slug`, `status`, and `publishedAt`). The package also ships a generic reference template at `@makeablebrand/next-editor/templates/collection-import.template.json`, but for a real site you should generate a config-specific template for the collection you want to import:
 
-- Only `pages` are imported. Collections such as posts or events are ignored by this workflow.
+```ts
+// scripts/generate-collection-import-template.ts
+import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { createCollectionImportTemplate } from "@makeablebrand/next-editor/import";
+import { nextEditorConfig } from "../lib/editor-config";
+
+const collectionId = process.argv[2];
+
+if (!collectionId) {
+  throw new Error("Usage: tsx scripts/generate-collection-import-template.ts <collection-id>");
+}
+
+const outputPath = resolve(process.cwd(), `content/${collectionId}-import.template.json`);
+
+await writeFile(
+  outputPath,
+  `${JSON.stringify(createCollectionImportTemplate(nextEditorConfig, collectionId), null, 2)}\n`,
+  "utf8",
+);
+
+console.log(`Wrote ${outputPath}`);
+```
+
+The generated collection file uses this shape:
+
+```json
+{
+  "version": 1,
+  "collectionId": "posts",
+  "entries": [
+    {
+      "entryId": "posts-entry-1",
+      "slug": null,
+      "status": "draft",
+      "publishedAt": null,
+      "values": {
+        "title": "",
+        "customSlug": "",
+        "excerpt": "",
+        "thumbnail": "",
+        "body": "",
+        "embedCode": "",
+        "relatedLinks": []
+      }
+    }
+  ]
+}
+```
+
+Page import rules:
+
 - `pageId` must match a page registered in your `nextEditorConfig`.
 - `path` is optional, but if included it must match the registered page path.
 - `values` must follow the page field structure exactly.
 - `toggle` fields must be booleans.
 - `select` fields must use one of the configured option values.
 - `text`, `textarea`, `image`, `slug`, `dateTime`, `richtext`, and `embed` fields must be strings.
+
+Collection import rules:
+
+- `collectionId` must match a collection registered in your `nextEditorConfig`.
+- `entryId` must be unique within the import document.
+- `values` must match the collection field ids exactly, including repeater item fields.
+- `slug` must be a string or `null` when included.
+- `status` must be `draft`, `published`, or `scheduled` when included.
+- `publishedAt` must be a string or `null` when included.
 
 ---
 
@@ -315,6 +375,41 @@ Suggested workflow for a site redesign:
 3. Review the JSON for select values, toggles, image URLs, and SEO fields.
 4. Run the import script against the new site database.
 5. Open the site and verify the editor is reading the imported values instead of your code-level placeholders.
+
+### 3c. Import a collection from JSON
+
+Create a small script in your app that reads the JSON file and imports it:
+
+```ts
+// scripts/import-collection.ts
+import { resolve } from "node:path";
+import { importCollectionFromFile } from "@makeablebrand/next-editor/import";
+import { nextEditorConfig } from "../lib/editor-config";
+
+const inputPath = process.argv[2];
+
+if (!inputPath) {
+  throw new Error("Usage: tsx scripts/import-collection.ts ./content/posts-import.json");
+}
+
+const result = await importCollectionFromFile({
+  config: nextEditorConfig,
+  filePath: resolve(process.cwd(), inputPath),
+  mode: "replace",
+});
+
+console.log(
+  `Imported ${result.importedEntryIds.length} entries into ${result.collectionId}: ${result.importedEntryIds.join(", ")}`,
+);
+```
+
+Run it after your JSON file has been filled with real content:
+
+```bash
+npx tsx scripts/import-collection.ts ./content/posts-import.json
+```
+
+Use `mode: "replace"` when each imported entry contains the full field payload you want stored for that record. Use `mode: "merge"` if you want to patch an existing entry's `values` while preserving any omitted metadata or fields already in the database. Validation is strict by default, so each imported entry is expected to include every registered collection field unless you explicitly opt into partial imports in code with `allowPartialFields: true`.
 
 ---
 
