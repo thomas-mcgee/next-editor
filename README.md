@@ -352,13 +352,39 @@ The demo is an end-to-end reference, not part of the product. The package is the
 
 ## Releases
 
-This repo uses Changesets and GitHub Actions for package releases.
+This repo uses Changesets for versioning and changelog generation. The package publishes to the `@makeablebrand` npm scope.
+
+### Standard release flow
 
 1. Make a package change.
 2. Run `npm run changeset` and describe the release.
-3. Merge to `main`.
-4. The `Release` workflow opens or updates a release PR.
-5. Merging that PR publishes `@makeablebrand/next-editor` to npm.
+3. Run `npm run version-packages`.
+4. Review the generated version bump and changelog updates.
+5. Commit the release changes.
+6. Publish the package.
+
+### Local publish
+
+If you are publishing manually from your machine:
+
+```bash
+cd packages/next-editor
+npm publish --access public --provenance=false
+```
+
+Notes:
+
+- `publishConfig.provenance` is enabled in the package for CI-supported publishes, but local CLI publishes may fail with `Automatic provenance generation not supported for provider: null`. Use `--provenance=false` when publishing manually.
+- npm may require an interactive browser approval or other 2FA/security-key verification during publish.
+- If your npm org requires stronger publish auth, make sure your account or token satisfies that policy before publishing.
+
+### GitHub Actions publish
+
+This repo also includes a `Release` workflow driven by Changesets. If you publish through GitHub Actions instead of locally:
+
+1. Merge your package changes to `main`.
+2. The `Release` workflow opens or updates a release PR.
+3. Merging that PR publishes `@makeablebrand/next-editor` to npm.
 
 Required GitHub repository secret:
 
