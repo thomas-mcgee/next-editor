@@ -1,5 +1,11 @@
 # @makeablebrand/next-editor
 
+## 0.1.3
+
+### Patch Changes
+
+- Add JSON import support for custom collections, including config-shaped templates, strict field validation, and import helpers for `ne_collection_entries`.
+
 ## 0.1.2
 
 ### Patch Changes
