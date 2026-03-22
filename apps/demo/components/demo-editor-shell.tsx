@@ -5,7 +5,7 @@ import {
   EditorSidebar,
   EditorViewport,
   FloatingAdminBar,
-} from "next-editor/client";
+} from "@makeablebrand/next-editor/client";
 import type { ComponentProps, ReactNode } from "react";
 
 type DemoEditorShellProps = Pick<

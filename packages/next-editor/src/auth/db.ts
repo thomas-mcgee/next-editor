@@ -42,7 +42,7 @@ const SCHEMA = `
 `;
 
 function createPool() {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = normalizeConnectionString(process.env.DATABASE_URL);
   if (!connectionString) {
     throw new Error(
       "[next-editor] DATABASE_URL is not set. Add it to your .env.local file.",
@@ -54,6 +54,29 @@ function createPool() {
     console.error("[next-editor] Failed to apply schema:", err);
   });
   return p;
+}
+
+function normalizeConnectionString(connectionString: string | undefined) {
+  if (!connectionString) return connectionString;
+
+  let url: URL;
+  try {
+    url = new URL(connectionString);
+  } catch {
+    return connectionString;
+  }
+
+  const sslMode = url.searchParams.get("sslmode");
+  const needsLibpqCompat =
+    sslMode === "prefer" || sslMode === "require" || sslMode === "verify-ca";
+
+  // pg emits a warning for these legacy sslmode values unless the intent is
+  // made explicit. Preserve the current behavior and silence the warning.
+  if (needsLibpqCompat && !url.searchParams.has("uselibpqcompat")) {
+    url.searchParams.set("uselibpqcompat", "true");
+  }
+
+  return url.toString();
 }
 
 export const pool = globalThis.nePool ?? createPool();

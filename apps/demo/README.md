@@ -1,6 +1,6 @@
-# next-editor demo
+# @makeablebrand/next-editor demo
 
-The demo app exercises the `next-editor` package against a real Next.js app. It uses the same public API a downstream project would use — no internal shortcuts.
+The demo app exercises the `@makeablebrand/next-editor` package against a real Next.js app. It uses the same public API a downstream project would use — no internal shortcuts.
 
 ## Setup
 
@@ -27,14 +27,14 @@ B2 variables are optional — image fields show a URL input fallback when they a
 
 ### 2. Database
 
-No migration or seed step is required for auth/admin setup. `next-editor` creates its `ne_users` and `ne_content` tables automatically on first run.
+No migration or seed step is required for auth/admin setup. `@makeablebrand/next-editor` creates its `ne_users`, `ne_content`, and `ne_collection_entries` tables automatically on first run.
 
 ### 3. Build the package
 
-The demo imports `next-editor` via a local `file:` reference. Build it before starting the dev server:
+The demo consumes the workspace package directly. Build it before starting the dev server:
 
 ```bash
-npm run build --workspace=next-editor
+npm run build --workspace=@makeablebrand/next-editor
 ```
 
 ### 4. Start

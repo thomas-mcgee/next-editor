@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { EditableImage, EditableText, useEditor } from "next-editor/client";
+import { EditableImage, EditableText, useEditor } from "@makeablebrand/next-editor/client";
 
 type DemoEditorApi = {
   getFieldValue: <T = unknown>(fieldId: string) => T | undefined;

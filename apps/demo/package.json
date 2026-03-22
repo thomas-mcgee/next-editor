@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "next": "16.2.1",
-    "next-editor": "file:../../packages/next-editor",
+    "@makeablebrand/next-editor": "0.1.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

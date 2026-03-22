@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RichTextEditor } from "next-editor/rich-text";
+import { RichTextEditor } from "@makeablebrand/next-editor/rich-text";
 import type { ContentTypeDefinition, ContentTypeField } from "@/lib/content-types";
 
 type NewContentFormProps = {

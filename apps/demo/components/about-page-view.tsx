@@ -1,6 +1,6 @@
 "use client";
 
-import { EditableImage, EditableText } from "next-editor/client";
+import { EditableImage, EditableText } from "@makeablebrand/next-editor/client";
 
 export function AboutPageView() {
   return (

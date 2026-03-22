@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "next-editor/lexxy.css";
+import "@makeablebrand/next-editor/lexxy.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

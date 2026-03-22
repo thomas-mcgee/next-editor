@@ -1,1 +1,1 @@
-export { GET, POST } from "next-editor/handlers";
+export { GET, POST } from "@makeablebrand/next-editor/handlers";

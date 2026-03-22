@@ -12,7 +12,7 @@ import {
   text,
   textarea,
   toggle,
-} from "next-editor";
+} from "@makeablebrand/next-editor";
 
 export const homePage = definePage({
   id: "home",

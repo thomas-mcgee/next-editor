@@ -1,7 +1,7 @@
 import { DemoEditorShell } from "@/components/demo-editor-shell";
 import { HomePageView } from "@/components/home-page-view";
 import { SiteHeader } from "@/components/site-header";
-import { canEdit } from "next-editor/server";
+import { canEdit } from "@makeablebrand/next-editor/server";
 import { homePage } from "@/lib/editor-config";
 import { getDemoPageValues } from "@/lib/page-content";
 import { createMetadata } from "@/lib/seo";

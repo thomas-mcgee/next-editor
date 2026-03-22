@@ -1,11 +1,11 @@
 # NextEditor
 
-`next-editor` is a drop-in CMS layer for custom Next.js sites. It handles authentication, user management, an admin panel, and a live-site editing experience — everything you need to replace WordPress without giving up control of your code.
+`@makeablebrand/next-editor` is a drop-in CMS layer for custom Next.js sites. It handles authentication, user management, an admin panel, and a live-site editing experience — everything you need to replace WordPress without giving up control of your code.
 
 **The intended workflow:**
 
 1. Start a blank Next.js project
-2. `npm install next-editor`
+2. `npm install @makeablebrand/next-editor`
 3. Set three environment variables
 4. Create two small stub files
 5. Build your frontend
@@ -31,7 +31,7 @@ Your client gets login-protected, live-site content editing. You keep full contr
 ## Installation
 
 ```bash
-npm install next-editor
+npm install @makeablebrand/next-editor
 ```
 
 Requires **Next.js ≥ 15** and **React ≥ 19**.
@@ -62,7 +62,7 @@ B2_PUBLIC_BASE_URL=https://your-bucket.s3.us-west-002.backblazeb2.com
 
 ```ts
 // app/api/auth/[...nextauth]/route.ts
-export { GET, POST } from "next-editor/auth";
+export { GET, POST } from "@makeablebrand/next-editor/auth";
 ```
 
 ### 3. Define your editable pages
@@ -84,7 +84,7 @@ import {
   text,
   textarea,
   toggle,
-} from "next-editor";
+} from "@makeablebrand/next-editor";
 
 export const homePage = definePage({
   id: "home",
@@ -178,7 +178,7 @@ Collections do not require a title field. If you want a human-friendly label in 
 
 ```ts
 // app/admin/[[...slug]]/page.tsx
-import { createAdminPage } from "next-editor/admin";
+import { createAdminPage } from "@makeablebrand/next-editor/admin";
 import { nextEditorConfig } from "@/lib/editor-config";
 
 export default createAdminPage(nextEditorConfig);
@@ -188,7 +188,7 @@ export default createAdminPage(nextEditorConfig);
 
 ```ts
 // app/layout.tsx
-import "next-editor/lexxy.css";
+import "@makeablebrand/next-editor/lexxy.css";
 ```
 
 ### 6. First run
@@ -206,8 +206,8 @@ Start your dev server and visit `/admin`. Since no users exist yet, you'll be sh
 
 ```tsx
 // app/page.tsx
-import { EditorProvider, EditorSidebar, FloatingAdminBar, EditorViewport } from "next-editor/client";
-import { canEdit, getPageContent } from "next-editor/server";
+import { EditorProvider, EditorSidebar, FloatingAdminBar, EditorViewport } from "@makeablebrand/next-editor/client";
+import { canEdit, getPageContent } from "@makeablebrand/next-editor/server";
 import { homePage } from "@/lib/editor-config";
 
 export default async function HomePage() {
@@ -241,17 +241,17 @@ The `saveUrl` and `imageUploadUrl` above need a route handler:
 
 ```ts
 // app/api/ne/[...path]/route.ts
-export { GET, POST } from "next-editor/handlers";
+export { GET, POST } from "@makeablebrand/next-editor/handlers";
 ```
 
 This single file handles both `/api/ne/content` (save/load page values) and `/api/ne/upload` (B2 image upload).
 
 ### Render collection content on the frontend
 
-Use the server helpers from `next-editor/server` in your own routes/pages:
+Use the server helpers from `@makeablebrand/next-editor/server` in your own routes/pages:
 
 ```ts
-import { listPublishedEntries, getPublishedEntryBySlug } from "next-editor/server";
+import { listPublishedEntries, getPublishedEntryBySlug } from "@makeablebrand/next-editor/server";
 
 const posts = await listPublishedEntries("posts");
 const event = await getPublishedEntryBySlug("events", slug);
@@ -262,7 +262,7 @@ const event = await getPublishedEntryBySlug("events", slug);
 ```tsx
 "use client";
 
-import { EditableText, EditableImage, useEditor } from "next-editor/client";
+import { EditableText, EditableImage, useEditor } from "@makeablebrand/next-editor/client";
 
 export function HeroSection() {
   const { getFieldValue } = useEditor();
@@ -304,7 +304,7 @@ Image uploads require the B2 environment variables. If they are not set, the upl
 The package includes a rich text editor built on [Lexxy](https://github.com/37signals/lexxy).
 
 ```tsx
-import { RichTextEditor } from "next-editor/rich-text";
+import { RichTextEditor } from "@makeablebrand/next-editor/rich-text";
 
 <RichTextEditor
   name="body"
@@ -316,7 +316,7 @@ import { RichTextEditor } from "next-editor/rich-text";
 Import the bundled styles in your root layout (required):
 
 ```ts
-import "next-editor/lexxy.css";
+import "@makeablebrand/next-editor/lexxy.css";
 ```
 
 ---
@@ -325,15 +325,15 @@ import "next-editor/lexxy.css";
 
 | Import | Contents |
 |---|---|
-| `next-editor` | `definePage`, `defineCollection`, `defineConfig`, field builders (`text`, `textarea`, `image`, `select`, `toggle`, `slug`, `dateTime`, `richText`, `embed`, `repeater`), TypeScript types |
-| `next-editor/client` | `EditorProvider`, `EditorSidebar`, `FloatingAdminBar`, `EditorViewport`, `EditableText`, `EditableImage`, `EditableRegion`, `useEditor` |
-| `next-editor/server` | `canEdit()`, `getPageContent()`, `getSession()`, collection entry helpers for published and admin-facing reads |
-| `next-editor/auth` | NextAuth route handlers — mount at `app/api/auth/[...nextauth]/route.ts` |
-| `next-editor/admin` | `createAdminPage(...)` plus the admin page component |
-| `next-editor/handlers` | Content + upload route handlers — mount at `app/api/ne/[...path]/route.ts` |
-| `next-editor/rich-text` | `RichTextEditor` |
-| `next-editor/b2` | `uploadImageToB2`, `hasB2Config` |
-| `next-editor/lexxy.css` | Bundled Lexxy and editor UI styles |
+| `@makeablebrand/next-editor` | `definePage`, `defineCollection`, `defineConfig`, field builders (`text`, `textarea`, `image`, `select`, `toggle`, `slug`, `dateTime`, `richText`, `embed`, `repeater`), TypeScript types |
+| `@makeablebrand/next-editor/client` | `EditorProvider`, `EditorSidebar`, `FloatingAdminBar`, `EditorViewport`, `EditableText`, `EditableImage`, `EditableRegion`, `useEditor` |
+| `@makeablebrand/next-editor/server` | `canEdit()`, `getPageContent()`, `getSession()`, collection entry helpers for published and admin-facing reads |
+| `@makeablebrand/next-editor/auth` | NextAuth route handlers — mount at `app/api/auth/[...nextauth]/route.ts` |
+| `@makeablebrand/next-editor/admin` | `createAdminPage(...)` plus the admin page component |
+| `@makeablebrand/next-editor/handlers` | Content + upload route handlers — mount at `app/api/ne/[...path]/route.ts` |
+| `@makeablebrand/next-editor/rich-text` | `RichTextEditor` |
+| `@makeablebrand/next-editor/b2` | `uploadImageToB2`, `hasB2Config` |
+| `@makeablebrand/next-editor/lexxy.css` | Bundled Lexxy and editor UI styles |
 
 ---
 
@@ -341,12 +341,28 @@ import "next-editor/lexxy.css";
 
 ```
 apps/
-  demo/           Reference Next.js app showing a minimal next-editor integration
+  demo/           Reference Next.js app showing a minimal @makeablebrand/next-editor integration
 packages/
   next-editor/    The installable npm package
 ```
 
 The demo is an end-to-end reference, not part of the product. The package is the product.
+
+---
+
+## Releases
+
+This repo uses Changesets and GitHub Actions for package releases.
+
+1. Make a package change.
+2. Run `npm run changeset` and describe the release.
+3. Merge to `main`.
+4. The `Release` workflow opens or updates a release PR.
+5. Merging that PR publishes `@makeablebrand/next-editor` to npm.
+
+Required GitHub repository secret:
+
+- `NPM_TOKEN` with publish access to the `@makeablebrand` npm scope
 
 ---
 
@@ -372,10 +388,10 @@ cp apps/demo/.env.example apps/demo/.env.local
 
 ### Build the package
 
-The demo imports `next-editor` via a local `file:` reference. Build it before running the dev server:
+The demo consumes the workspace package directly. Build it before running the dev server:
 
 ```bash
-npm run build --workspace=next-editor
+npm run build --workspace=@makeablebrand/next-editor
 ```
 
 ### Start

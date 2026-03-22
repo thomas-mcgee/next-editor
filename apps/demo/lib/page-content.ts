@@ -1,4 +1,4 @@
-import { getPageContent } from "next-editor/server";
+import { getPageContent } from "@makeablebrand/next-editor/server";
 
 type EditorPageValues = Record<string, unknown>;
 
@@ -20,7 +20,7 @@ const demoPageDefaults: Record<string, EditorPageValues> = {
       },
       item2: {
         title: "Package-owned CMS backend",
-        body: "Authentication, admin routes, content handlers, and persistence live in next-editor so downstream projects mount routes instead of rebuilding CMS plumbing.",
+        body: "Authentication, admin routes, content handlers, and persistence live in @makeablebrand/next-editor so downstream projects mount routes instead of rebuilding CMS plumbing.",
         enabled: true,
       },
       item3: {

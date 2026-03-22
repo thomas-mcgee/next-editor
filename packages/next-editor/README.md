@@ -1,4 +1,4 @@
-# next-editor
+# @makeablebrand/next-editor
 
 A lightweight, code-first CMS layer for custom Next.js sites. Define editable fields directly in your page code, give editors a floating control bar and sidebar to make changes on the live site, and ship with built-in auth, admin, and content handlers.
 
@@ -19,7 +19,7 @@ There is no hosted service, no visual page builder, and no database vendor lock-
 ## Installation
 
 ```bash
-npm install next-editor
+npm install @makeablebrand/next-editor
 ```
 
 The package requires Next.js ≥ 15 and React ≥ 19 as peer dependencies, which your app already provides.
@@ -28,7 +28,7 @@ Import the Lexxy rich-text styles once in your root layout (required even if you
 
 ```tsx
 // app/layout.tsx
-import "next-editor/lexxy.css";
+import "@makeablebrand/next-editor/lexxy.css";
 ```
 
 ---
@@ -55,7 +55,7 @@ import {
   text,
   textarea,
   toggle,
-} from "next-editor";
+} from "@makeablebrand/next-editor";
 
 export const homePage = definePage({
   id: "home",
@@ -153,12 +153,12 @@ Collections do not require a `title` field. If you want a specific field to be u
 
 ```ts
 // app/api/auth/[...nextauth]/route.ts
-export { GET, POST } from "next-editor/auth";
+export { GET, POST } from "@makeablebrand/next-editor/auth";
 ```
 
 ```ts
 // app/admin/[[...slug]]/page.tsx
-import { createAdminPage } from "next-editor/admin";
+import { createAdminPage } from "@makeablebrand/next-editor/admin";
 import { nextEditorConfig } from "@/lib/editor-config";
 
 export default createAdminPage(nextEditorConfig);
@@ -166,10 +166,10 @@ export default createAdminPage(nextEditorConfig);
 
 ```ts
 // app/api/ne/[...path]/route.ts
-export { GET, POST } from "next-editor/handlers";
+export { GET, POST } from "@makeablebrand/next-editor/handlers";
 ```
 
-`next-editor` creates its `ne_users` and `ne_content` tables automatically on first run. Visit `/admin` and the package will show `/admin/setup` when no users exist yet.
+`@makeablebrand/next-editor` creates its `ne_users`, `ne_content`, and `ne_collection_entries` tables automatically on first run. Visit `/admin` and the package will show `/admin/setup` when no users exist yet.
 
 ---
 
@@ -179,8 +179,8 @@ Load stored content values server-side and pass them to `EditorProvider`. The pr
 
 ```tsx
 // app/page.tsx
-import { EditorProvider, EditorSidebar, EditorViewport, FloatingAdminBar } from "next-editor/client";
-import { canEdit, getPageContent } from "next-editor/server";
+import { EditorProvider, EditorSidebar, EditorViewport, FloatingAdminBar } from "@makeablebrand/next-editor/client";
+import { canEdit, getPageContent } from "@makeablebrand/next-editor/server";
 import { homePage } from "@/lib/editor-config";
 
 export default async function HomePage() {
@@ -219,7 +219,7 @@ Use `EditableText` and `EditableImage` in your client components. They read the 
 ```tsx
 "use client";
 
-import { EditableText, EditableImage, useEditor } from "next-editor/client";
+import { EditableText, EditableImage, useEditor } from "@makeablebrand/next-editor/client";
 
 export function HeroSection() {
   const { getFieldValue } = useEditor();
@@ -252,7 +252,7 @@ export function HeroSection() {
 Use `EditableRegion` to wrap arbitrary content that maps to a field without rendering a specific element:
 
 ```tsx
-import { EditableRegion } from "next-editor/client";
+import { EditableRegion } from "@makeablebrand/next-editor/client";
 
 <EditableRegion fieldId="hero.heading">
   <h1 className="text-5xl font-bold">{value}</h1>
@@ -275,7 +275,7 @@ import {
   getPublishedEntryBySlug,
   listCollectionEntries,
   listPublishedEntries,
-} from "next-editor/server";
+} from "@makeablebrand/next-editor/server";
 
 const allPosts = await listPublishedEntries("posts");
 const event = await getPublishedEntryBySlug("events", slug);
@@ -304,7 +304,7 @@ B2_APPLICATION_KEY=your-application-key
 B2_PUBLIC_BASE_URL=https://your-bucket.s3.us-west-002.backblazeb2.com
 ```
 
-Find these values in the Backblaze B2 console under **App Keys** and **Buckets**. `B2_PUBLIC_BASE_URL` is the base URL used to construct public image URLs after upload.
+Find these values in the Backblaze B2 console under **App Keys** and **Buckets**. `B2_PUBLIC_BASE_URL` is the base URL used to construct public image URLs after upload. The package also accepts `B2_BUCKET_PUBLIC_URL` as a fallback alias if you already use that name elsewhere.
 
 ---
 
@@ -313,7 +313,7 @@ Find these values in the Backblaze B2 console under **App Keys** and **Buckets**
 The package includes a rich text editor built on [Lexxy](https://github.com/37signals/lexxy). It is exported from a separate entry point to keep the main bundle light.
 
 ```tsx
-import { RichTextEditor } from "next-editor/rich-text";
+import { RichTextEditor } from "@makeablebrand/next-editor/rich-text";
 
 <RichTextEditor
   name="body"           // hidden input name for form submission
@@ -334,7 +334,7 @@ The editor loads Lexxy asynchronously — it shows a placeholder until ready. St
 Import the bundled Lexxy styles in your root layout (already required above):
 
 ```tsx
-import "next-editor/lexxy.css";
+import "@makeablebrand/next-editor/lexxy.css";
 ```
 
 ---
@@ -352,7 +352,7 @@ import "next-editor/lexxy.css";
 | `B2_APPLICATION_KEY` | No | B2 application key secret. |
 | `B2_PUBLIC_BASE_URL` | No | Base URL for constructing public image URLs after upload. |
 
-B2 variables are only required if you use the `uploadImageToB2` helper. Image fields fall back to a plain URL input when they are not set.
+B2 variables are only required if you use the built-in upload handler or call `uploadImageToB2` directly. Image fields fall back to a plain URL input when `imageUploadUrl` is not configured.
 
 ---
 
@@ -360,21 +360,23 @@ B2 variables are only required if you use the `uploadImageToB2` helper. Image fi
 
 | Import path | Contents |
 |---|---|
-| `next-editor` | `definePage`, `defineCollection`, `defineConfig`, field builders (`text`, `textarea`, `image`, `select`, `toggle`, `slug`, `dateTime`, `richText`, `embed`, `repeater`), and TypeScript types |
-| `next-editor/client` | `EditorProvider`, `EditorSidebar`, `EditorViewport`, `FloatingAdminBar`, `EditableText`, `EditableImage`, `EditableRegion`, `useEditor` |
-| `next-editor/server` | `getSession`, `canEdit`, `getPageContent`, collection read helpers |
-| `next-editor/auth` | NextAuth route handlers plus auth helpers |
-| `next-editor/admin` | `createAdminPage(...)` plus the built-in admin page |
-| `next-editor/handlers` | Built-in `/api/ne/content` and `/api/ne/upload` handlers |
-| `next-editor/rich-text` | `RichTextEditor`, `uploadEditorImage` |
-| `next-editor/b2` | `uploadImageToB2`, `hasB2Config`, `getB2Config` |
-| `next-editor/lexxy.css` | Bundled Lexxy and editor UI styles |
+| `@makeablebrand/next-editor` | `definePage`, `defineCollection`, `defineConfig`, field builders (`text`, `textarea`, `image`, `select`, `toggle`, `slug`, `dateTime`, `richText`, `embed`, `repeater`), and TypeScript types |
+| `@makeablebrand/next-editor/client` | `EditorProvider`, `EditorSidebar`, `EditorViewport`, `FloatingAdminBar`, `EditableText`, `EditableImage`, `EditableRegion`, `useEditor` |
+| `@makeablebrand/next-editor/server` | `getSession`, `canEdit`, `getPageContent`, collection read helpers |
+| `@makeablebrand/next-editor/auth` | NextAuth route handlers plus auth helpers |
+| `@makeablebrand/next-editor/admin` | `createAdminPage(...)` plus the built-in admin page |
+| `@makeablebrand/next-editor/handlers` | Built-in `/api/ne/content` and `/api/ne/upload` handlers |
+| `@makeablebrand/next-editor/rich-text` | `RichTextEditor`, `uploadEditorImage` |
+| `@makeablebrand/next-editor/b2` | `uploadImageToB2`, `hasB2Config`, `getB2Config` |
+| `@makeablebrand/next-editor/lexxy.css` | Bundled Lexxy and editor UI styles |
+
+`@makeablebrand/next-editor/client` and `@makeablebrand/next-editor/rich-text` are client-oriented ESM entry points intended for normal Next.js `import` usage.
 
 ---
 
 ## Auth
 
-The package ships with built-in auth and admin flows. Mount `next-editor/auth` and `next-editor/admin`, set `AUTH_SECRET` and `DATABASE_URL`, then visit `/admin` to create the first admin account.
+The package ships with built-in auth and admin flows. Mount `@makeablebrand/next-editor/auth` and `@makeablebrand/next-editor/admin`, set `AUTH_SECRET` and `DATABASE_URL`, then visit `/admin` to create the first admin account.
 
 Roles:
 

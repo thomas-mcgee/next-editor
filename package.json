@@ -7,8 +7,14 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=next-editor && npm run build --workspace=demo",
+    "build": "npm run build --workspace=@makeablebrand/next-editor && npm run build --workspace=demo",
     "dev": "npm run dev --workspace=demo",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.7"
   }
 }

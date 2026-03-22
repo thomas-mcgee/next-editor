@@ -1,1 +1,1 @@
-export { GET, POST } from "next-editor/auth";
+export { GET, POST } from "@makeablebrand/next-editor/auth";

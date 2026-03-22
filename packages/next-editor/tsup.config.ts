@@ -16,10 +16,8 @@ export default defineConfig([
   {
     entry: {
       index: "src/index.ts",
-      client: "src/client.ts",
       server: "src/server.ts",
       b2: "src/b2.ts",
-      "rich-text-editor": "src/rich-text-editor.tsx",
       "handlers/index": "src/handlers/index.ts",
     },
     format: ["esm", "cjs"],
@@ -38,6 +36,21 @@ export default defineConfig([
     dts: false,
     splitting: true,
     external,
+  },
+
+  // ── Client boundary modules — ESM only to preserve "use client" ──────────
+  {
+    entry: {
+      client: "src/client.ts",
+      "rich-text-editor": "src/rich-text-editor.tsx",
+    },
+    format: ["esm"],
+    dts: true,
+    splitting: true,
+    external,
+    esbuildOptions(options) {
+      options.jsx = "automatic";
+    },
   },
 
   // ── Admin panel — NOT bundled ─────────────────────────────────────────────

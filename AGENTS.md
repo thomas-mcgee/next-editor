@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-This repository exists to produce an installable `next-editor` package for use
+This repository exists to produce an installable `@makeablebrand/next-editor` package for use
 inside other projects.
 
 ## Package-First Rule
