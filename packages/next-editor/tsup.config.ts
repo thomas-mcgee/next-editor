@@ -16,6 +16,7 @@ export default defineConfig([
   {
     entry: {
       index: "src/index.ts",
+      import: "src/import.ts",
       server: "src/server.ts",
       b2: "src/b2.ts",
       "handlers/index": "src/handlers/index.ts",

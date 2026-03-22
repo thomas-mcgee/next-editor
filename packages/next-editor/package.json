@@ -1,6 +1,6 @@
 {
   "name": "@makeablebrand/next-editor",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Drop-in CMS layer for custom Next.js sites.",
   "license": "MIT",
   "keywords": [
@@ -31,6 +31,12 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "default": "./dist/index.mjs"
+    },
+    "./import": {
+      "types": "./dist/import.d.ts",
+      "import": "./dist/import.mjs",
+      "require": "./dist/import.js",
+      "default": "./dist/import.mjs"
     },
     "./client": {
       "types": "./dist/client.d.ts",
@@ -71,6 +77,7 @@
       "require": "./dist/b2.js",
       "default": "./dist/b2.mjs"
     },
+    "./templates/pages-import.template.json": "./templates/pages-import.template.json",
     "./lexxy.css": "./styles/lexxy.css",
     "./styles/*.css": "./styles/*.css"
   },
@@ -80,6 +87,7 @@
   "files": [
     "dist",
     "styles",
+    "templates",
     "LICENSE",
     "README.md"
   ],

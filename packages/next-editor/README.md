@@ -147,6 +147,69 @@ Every collection automatically gets publication controls in admin:
 
 Collections do not require a `title` field. If you want a specific field to be used as the admin label, set `useAsTitle`.
 
+### Page import template and importer
+
+NextEditor now ships a page-only import helper at `@makeablebrand/next-editor/import`. It validates a JSON document against your registered page definitions, including the auto-generated SEO section, and writes each page payload into `ne_content`.
+
+The package also ships a generic reference template at `@makeablebrand/next-editor/templates/pages-import.template.json`, but for a real site you should generate a config-specific template from your own `nextEditorConfig`:
+
+```ts
+// scripts/generate-page-import-template.ts
+import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { createPageImportTemplate } from "@makeablebrand/next-editor/import";
+import { nextEditorConfig } from "../lib/editor-config";
+
+const outputPath = resolve(process.cwd(), "content/pages-import.template.json");
+
+await writeFile(
+  outputPath,
+  `${JSON.stringify(createPageImportTemplate(nextEditorConfig), null, 2)}\n`,
+  "utf8",
+);
+
+console.log(`Wrote ${outputPath}`);
+```
+
+Run it with a TypeScript runner such as:
+
+```bash
+npx tsx scripts/generate-page-import-template.ts
+```
+
+The generated file uses this shape:
+
+```json
+{
+  "version": 1,
+  "pages": [
+    {
+      "pageId": "home",
+      "path": "/",
+      "values": {
+        "hero": {
+          "heading": "",
+          "subheading": ""
+        },
+        "seo": {
+          "title": ""
+        }
+      }
+    }
+  ]
+}
+```
+
+Rules:
+
+- Only `pages` are imported. Collections such as posts or events are ignored by this workflow.
+- `pageId` must match a page registered in your `nextEditorConfig`.
+- `path` is optional, but if included it must match the registered page path.
+- `values` must follow the page field structure exactly.
+- `toggle` fields must be booleans.
+- `select` fields must use one of the configured option values.
+- `text`, `textarea`, `image`, `slug`, `dateTime`, `richtext`, and `embed` fields must be strings.
+
 ---
 
 ### 2. Mount the package routes
@@ -209,6 +272,49 @@ export default async function HomePage() {
 ```
 
 `EditorViewport` shifts the page content right when the sidebar opens. `FloatingAdminBar` renders the "Edit" / "Admin" floating button in the corner.
+
+---
+
+### 3b. Import page content from JSON
+
+Create a small script in your app that reads the JSON file and imports it:
+
+```ts
+// scripts/import-pages.ts
+import { resolve } from "node:path";
+import { importPagesFromFile } from "@makeablebrand/next-editor/import";
+import { nextEditorConfig } from "../lib/editor-config";
+
+const inputPath = process.argv[2];
+
+if (!inputPath) {
+  throw new Error("Usage: tsx scripts/import-pages.ts ./content/pages-import.json");
+}
+
+const result = await importPagesFromFile({
+  config: nextEditorConfig,
+  filePath: resolve(process.cwd(), inputPath),
+  mode: "replace",
+});
+
+console.log(`Imported ${result.importedPageIds.length} pages: ${result.importedPageIds.join(", ")}`);
+```
+
+Run it after your JSON file has been filled with real content:
+
+```bash
+npx tsx scripts/import-pages.ts ./content/pages-import.json
+```
+
+Use `mode: "replace"` when your JSON file contains the full page payload for every field. Use `mode: "merge"` if you want to patch existing page values instead of replacing them wholesale. Validation is strict by default, so the import expects every registered page and every registered field unless you explicitly opt into partial imports in code with `allowPartialPages: true` and/or `allowPartialFields: true`.
+
+Suggested workflow for a site redesign:
+
+1. Generate the config-specific template.
+2. Have your scraping/import agent fill the JSON file with content from the current site.
+3. Review the JSON for select values, toggles, image URLs, and SEO fields.
+4. Run the import script against the new site database.
+5. Open the site and verify the editor is reading the imported values instead of your code-level placeholders.
 
 ---
 

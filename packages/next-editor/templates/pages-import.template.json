@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "pageId": "replace-with-page-id",
+      "path": "/replace-with-page-path",
+      "values": {
+        "sectionId": {
+          "fieldId": "replace with imported content"
+        },
+        "seo": {
+          "title": "",
+          "description": "",
+          "canonicalUrl": "",
+          "slug": "",
+          "robotsIndex": true,
+          "robotsFollow": true,
+          "openGraph": {
+            "title": "",
+            "description": "",
+            "image": "",
+            "imageAlt": "",
+            "url": "",
+            "type": "website",
+            "siteName": ""
+          },
+          "twitter": {
+            "title": "",
+            "description": "",
+            "image": "",
+            "imageAlt": "",
+            "card": "summary_large_image"
+          }
+        }
+      }
+    }
+  ]
+}

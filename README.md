@@ -174,6 +174,66 @@ Every collection gets built-in publication metadata in admin:
 
 Collections do not require a title field. If you want a human-friendly label in admin lists, set `useAsTitle` to one of your field ids.
 
+### Page import template and importer
+
+The package includes a page-only import helper at `@makeablebrand/next-editor/import`. It validates JSON against your registered page definitions and imports the result into `ne_content`, one payload per page.
+
+There is also a generic reference file at `@makeablebrand/next-editor/templates/pages-import.template.json`, but the intended workflow is to generate a config-specific template from your actual `nextEditorConfig`:
+
+```ts
+// scripts/generate-page-import-template.ts
+import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { createPageImportTemplate } from "@makeablebrand/next-editor/import";
+import { nextEditorConfig } from "../lib/editor-config";
+
+const outputPath = resolve(process.cwd(), "content/pages-import.template.json");
+
+await writeFile(
+  outputPath,
+  `${JSON.stringify(createPageImportTemplate(nextEditorConfig), null, 2)}\n`,
+  "utf8",
+);
+```
+
+Run it with a TypeScript runner such as:
+
+```bash
+npx tsx scripts/generate-page-import-template.ts
+```
+
+The generated JSON uses this shape:
+
+```json
+{
+  "version": 1,
+  "pages": [
+    {
+      "pageId": "home",
+      "path": "/",
+      "values": {
+        "hero": {
+          "heading": "",
+          "subheading": ""
+        },
+        "seo": {
+          "title": ""
+        }
+      }
+    }
+  ]
+}
+```
+
+Import rules:
+
+- Only pages are imported by this workflow.
+- `pageId` must exist in your registered page config.
+- `path` is optional, but if present it must match the registered page path.
+- `toggle` values must be booleans.
+- `select` values must match configured option values.
+- `text`, `textarea`, `image`, `slug`, `dateTime`, `richtext`, and `embed` values must be strings.
+
 ### 4. Mount the admin panel
 
 ```ts
@@ -245,6 +305,47 @@ export { GET, POST } from "@makeablebrand/next-editor/handlers";
 ```
 
 This single file handles both `/api/ne/content` (save/load page values) and `/api/ne/upload` (B2 image upload).
+
+### Import page content from JSON
+
+Create a script in your app to run the import:
+
+```ts
+// scripts/import-pages.ts
+import { resolve } from "node:path";
+import { importPagesFromFile } from "@makeablebrand/next-editor/import";
+import { nextEditorConfig } from "../lib/editor-config";
+
+const inputPath = process.argv[2];
+
+if (!inputPath) {
+  throw new Error("Usage: tsx scripts/import-pages.ts ./content/pages-import.json");
+}
+
+const result = await importPagesFromFile({
+  config: nextEditorConfig,
+  filePath: resolve(process.cwd(), inputPath),
+  mode: "replace",
+});
+
+console.log(`Imported ${result.importedPageIds.length} pages: ${result.importedPageIds.join(", ")}`);
+```
+
+Run it with:
+
+```bash
+npx tsx scripts/import-pages.ts ./content/pages-import.json
+```
+
+`mode: "replace"` expects a complete page payload. `mode: "merge"` lets you patch existing page values instead. Validation is strict by default, so every registered page and field is expected unless you opt into `allowPartialPages` or `allowPartialFields` in code.
+
+Recommended sequence:
+
+1. Generate the page template from your `nextEditorConfig`.
+2. Fill that JSON with content scraped from the site you are replacing.
+3. Review image URLs, select values, toggles, and SEO fields.
+4. Run the import script against the target database.
+5. Verify the redesigned site renders imported content rather than code-level fallback copy.
 
 ### Render collection content on the frontend
 
