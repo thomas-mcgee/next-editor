@@ -1,5 +1,11 @@
 # @makeablebrand/next-editor
 
+## 0.1.4
+
+### Patch Changes
+
+- Improve admin UX with linked collection/page titles, add Brevo-powered password resets and Turnstile login protection, and fix first-load admin theme rendering after sign-in.
+
 ## 0.1.3
 
 ### Patch Changes

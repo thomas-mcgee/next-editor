@@ -36,9 +36,20 @@ const SCHEMA = `
     PRIMARY KEY (collection_id, entry_id)
   );
 
+  CREATE TABLE IF NOT EXISTS ne_password_reset_tokens (
+    token_hash  TEXT        PRIMARY KEY,
+    user_id     TEXT        NOT NULL REFERENCES ne_users(id) ON DELETE CASCADE,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    used_at     TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+
   CREATE UNIQUE INDEX IF NOT EXISTS ne_collection_entries_slug_idx
     ON ne_collection_entries (collection_id, slug)
     WHERE slug IS NOT NULL;
+
+  CREATE INDEX IF NOT EXISTS ne_password_reset_tokens_user_idx
+    ON ne_password_reset_tokens (user_id);
 `;
 
 function createPool() {

@@ -5,7 +5,7 @@ import { neLogoutAction, neDeleteUserAction } from "../auth/actions";
 import { NeThemeScript } from "./theme-script";
 import { NeThemeProvider } from "./theme-provider";
 import { NeAdminShell } from "./shell";
-import { NeLoginPage } from "./login";
+import { NeForgotPasswordPage, NeLoginPage, NeResetPasswordPage } from "./login";
 import { NeSetupPage } from "./setup";
 import { NeDashboardPage } from "./dashboard";
 import { NePagesPage } from "./pages";
@@ -18,6 +18,7 @@ import { NeSettingsPage } from "./settings";
 import type { NextEditorConfig } from "../types";
 import { neDeleteCollectionEntryAction, neSaveCollectionEntryAction } from "./collection-actions";
 import { getCollectionEntry, listCollectionEntries } from "../content/collection-store";
+import { getPasswordResetToken, isPasswordResetTokenActive } from "../auth/password-reset-store";
 
 type Props = {
   params: Promise<{ slug?: string[] }>;
@@ -50,7 +51,27 @@ async function NextEditorAdminPage({
   if (path === "login") {
     const session = await auth();
     if (session?.user?.role) redirect("/admin");
-    return <NeLoginPage error={sp(query, "error")} />;
+    return <NeLoginPage error={sp(query, "error") ?? sp(query, "status")} />;
+  }
+
+  if (path === "login/forgot") {
+    const session = await auth();
+    if (session?.user?.role) redirect("/admin");
+    return <NeForgotPasswordPage status={sp(query, "status")} />;
+  }
+
+  if (path === "login/reset") {
+    const session = await auth();
+    if (session?.user?.role) redirect("/admin");
+    const token = sp(query, "token");
+    const resetToken = token ? await getPasswordResetToken(token) : null;
+    const hasActiveToken = token ? isPasswordResetTokenActive(resetToken) : false;
+    return (
+      <NeResetPasswordPage
+        token={hasActiveToken ? token : undefined}
+        status={sp(query, "status") ?? (token && !hasActiveToken ? "expired" : undefined)}
+      />
+    );
   }
 
   // ── Everything else requires auth ────────────────────────────────────────

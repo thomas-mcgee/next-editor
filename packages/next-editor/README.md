@@ -14,6 +14,8 @@ There is no hosted service, no visual page builder, and no database vendor lock-
 4. When an editor clicks **Save**, the package POSTs the updated values to the built-in content handler and persists them in Postgres.
 5. The page re-renders with the new values on the next load.
 
+The built-in auth flow includes username/password login, optional Turnstile verification on the login form, and password reset emails delivered through Brevo.
+
 ---
 
 ## Installation
@@ -546,6 +548,13 @@ import "@makeablebrand/next-editor/lexxy.css";
 |---|---|---|
 | `AUTH_SECRET` | Yes | Secret used to sign NextAuth JWTs. Generate with `openssl rand -base64 32`. |
 | `DATABASE_URL` | Yes | Postgres connection string. Works with Neon, Supabase, Railway, or any Postgres 13+. |
+| `BREVO_API_KEY` | No | Required for the built-in password reset email flow. |
+| `BREVO_SENDER_EMAIL` | No | Sender email address used for Brevo password reset emails. |
+| `BREVO_SENDER_NAME` | No | Sender display name for Brevo password reset emails. Defaults to `NextEditor`. |
+| `NEXT_EDITOR_APP_URL` | No | Optional canonical site origin for password reset links when the current request origin is unavailable. |
+| `NEXT_EDITOR_TURNSTILE_ENABLED` | No | Defaults to enabled. Set `false`, `off`, `0`, or `no` to disable Turnstile on the login form. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | No | Cloudflare Turnstile site key. Falls back to Cloudflare test keys if omitted while Turnstile remains enabled. |
+| `TURNSTILE_SECRET_KEY` | No | Cloudflare Turnstile secret key. Falls back to Cloudflare test keys if omitted while Turnstile remains enabled. |
 | `B2_ENDPOINT` | No | Backblaze B2 S3-compatible endpoint URL. |
 | `B2_REGION` | No | B2 region (e.g. `us-west-002`). |
 | `B2_BUCKET_NAME` | No | Name of your B2 bucket. |
@@ -554,6 +563,8 @@ import "@makeablebrand/next-editor/lexxy.css";
 | `B2_PUBLIC_BASE_URL` | No | Base URL for constructing public image URLs after upload. |
 
 B2 variables are only required if you use the built-in upload handler or call `uploadImageToB2` directly. Image fields fall back to a plain URL input when `imageUploadUrl` is not configured.
+
+The login form uses Turnstile by default. If you do not provide real Turnstile keys, NextEditor uses Cloudflare test keys so local and preview auth flows still render without breaking. Password reset links are available from `/admin/login` and require Brevo to be configured before reset emails can be sent.
 
 ---
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 type ThemeMode = "system" | "light" | "dark";
 type ThemeContextValue = { theme: ThemeMode; setTheme: (t: ThemeMode) => void };
@@ -10,7 +10,9 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 // CSS variables injected by the theme provider
 const LIGHT_VARS = `
-  :root[data-ne-theme="light"], :root[data-ne-theme="system"] {
+  :root:not([data-ne-theme]),
+  :root[data-ne-theme="light"],
+  :root[data-ne-theme="system"] {
     --ne-bg: #f9f9f8;
     --ne-surface: #ffffff;
     --ne-surface-muted: #f4f4f3;
@@ -39,6 +41,17 @@ const DARK_VARS = `
 
 const SYSTEM_DARK_VARS = `
   @media (prefers-color-scheme: dark) {
+    :root:not([data-ne-theme]) {
+      --ne-bg: #111110;
+      --ne-surface: #1c1c1a;
+      --ne-surface-muted: #232321;
+      --ne-surface-elevated: rgba(28,28,26,0.85);
+      --ne-fg: #eeeeec;
+      --ne-muted: #888884;
+      --ne-border: rgba(255,255,255,0.06);
+      --ne-border-strong: rgba(255,255,255,0.10);
+      --ne-shadow-soft: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    }
     :root[data-ne-theme="system"] {
       --ne-bg: #111110;
       --ne-surface: #1c1c1a;
@@ -59,6 +72,16 @@ export function NeThemeProvider({ children }: { children: ReactNode }) {
     const stored = document.documentElement.dataset.neTheme;
     return stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
   });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const nextTheme =
+      stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
+
+    root.dataset.neTheme = nextTheme;
+    setThemeState(nextTheme);
+  }, []);
 
   const setTheme = (next: ThemeMode) => {
     setThemeState(next);

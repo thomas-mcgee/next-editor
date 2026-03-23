@@ -35,7 +35,7 @@ export function NePagesPage({ pages }: { pages: PageDefinition[] }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--ne-surface-muted)" }}>
-              {["Page", "Path", "Sections", "Description", ""].map((h) => (
+              {["Page", "Path", "Sections", "Description"].map((h) => (
                 <th key={h} style={{ ...cell, fontWeight: 600, color: "var(--ne-muted)", textAlign: "left" }}>{h}</th>
               ))}
             </tr>
@@ -43,15 +43,14 @@ export function NePagesPage({ pages }: { pages: PageDefinition[] }) {
           <tbody>
             {pages.map((page) => (
               <tr key={page.id} style={{ borderTop: "1px solid var(--ne-border-strong)" }}>
-                <td style={{ ...cell, fontWeight: 600, color: "var(--ne-fg)" }}>{page.label}</td>
+                <td style={{ ...cell, fontWeight: 600 }}>
+                  <a href={page.path} style={{ color: "var(--ne-fg)", textDecoration: "none" }}>
+                    {page.label}
+                  </a>
+                </td>
                 <td style={{ ...cell, color: "var(--ne-muted)" }}>{page.path}</td>
                 <td style={{ ...cell, color: "var(--ne-muted)" }}>{page.sections.length}</td>
                 <td style={{ ...cell, color: "var(--ne-muted)" }}>{page.description ?? ""}</td>
-                <td style={{ ...cell, textAlign: "right" }}>
-                  <a href={page.path} style={{ fontSize: 13, color: "var(--ne-muted)", textDecoration: "none" }}>
-                    Visit
-                  </a>
-                </td>
               </tr>
             ))}
           </tbody>

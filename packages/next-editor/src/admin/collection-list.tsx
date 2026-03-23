@@ -66,15 +66,27 @@ export function NeCollectionListPage({
             ) : (
               entries.map((entry) => (
                 <tr key={entry.entryId} style={{ borderTop: "1px solid var(--ne-border-strong)" }}>
-                  <td style={{ ...cell, fontWeight: 600, color: "var(--ne-fg)" }}>{getEntryTitle(collection, entry)}</td>
+                  <td style={{ ...cell, fontWeight: 600 }}>
+                    <a
+                      href={`/admin/collections/${collection.id}/${entry.entryId}`}
+                      style={{ color: "var(--ne-fg)", textDecoration: "none" }}
+                    >
+                      {getEntryTitle(collection, entry)}
+                    </a>
+                  </td>
                   <td style={{ ...cell, color: "var(--ne-muted)" }}>{entry.slug ?? ""}</td>
                   <td style={{ ...cell, color: "var(--ne-muted)", textTransform: "capitalize" }}>{entry.status}</td>
                   <td style={{ ...cell, color: "var(--ne-muted)" }}>{formatDate(entry.updatedAt)}</td>
                   <td style={{ ...cell, textAlign: "right" }}>
                     <div style={{ display: "inline-flex", alignItems: "center", gap: 14 }}>
-                      <a href={`/admin/collections/${collection.id}/${entry.entryId}`} style={{ fontSize: 13, color: "var(--ne-muted)", textDecoration: "none" }}>
-                        Edit
-                      </a>
+                      {getEntryViewHref(collection, entry) ? (
+                        <a
+                          href={getEntryViewHref(collection, entry)!}
+                          style={{ fontSize: 13, color: "var(--ne-muted)", textDecoration: "none" }}
+                        >
+                          View
+                        </a>
+                      ) : null}
                       <form action={deleteAction}>
                         <input type="hidden" name="collectionId" value={collection.id} />
                         <input type="hidden" name="entryId" value={entry.entryId} />
@@ -120,6 +132,17 @@ function getEntryTitle(collection: CollectionDefinition, entry: CollectionEntryR
   }
 
   return entry.slug || entry.entryId;
+}
+
+function getEntryViewHref(collection: CollectionDefinition, entry: CollectionEntryRecord) {
+  if (!collection.path || !entry.slug) return null;
+  return joinPaths(collection.path, entry.slug);
+}
+
+function joinPaths(basePath: string, slug: string) {
+  const normalizedBase = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
+  const normalizedSlug = slug.startsWith("/") ? slug.slice(1) : slug;
+  return `${normalizedBase}/${normalizedSlug}`;
 }
 
 function formatDate(value: string) {

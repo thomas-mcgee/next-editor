@@ -72,6 +72,14 @@ export async function updateUser(
   return rows[0];
 }
 
+export async function updateUserPassword(id: string, password_hash: string): Promise<void> {
+  const { rowCount } = await pool.query(
+    `UPDATE ne_users SET password_hash = $1 WHERE id = $2`,
+    [password_hash, id],
+  );
+  if (!rowCount) throw new Error(`[next-editor] User "${id}" not found.`);
+}
+
 export async function deleteUser(id: string): Promise<void> {
   await pool.query(`DELETE FROM ne_users WHERE id = $1`, [id]);
 }

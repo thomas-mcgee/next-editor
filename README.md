@@ -21,6 +21,8 @@ Your client gets login-protected, live-site content editing. You keep full contr
 - **Admin panel** — built-in at `/admin`; first visit triggers a setup screen when no users exist
 - **First-run setup** — prompts for the first administrator account when the database is empty
 - **Authentication** — username/password login with JWT sessions via NextAuth v5
+- **Password reset** — request/reset flow with Brevo email delivery
+- **Bot protection** — Cloudflare Turnstile on the login form with a disable flag and test-key fallback
 - **User roles** — Admin (content editing + user management) and Editor (content editing only)
 - **Content storage** — page values saved to your Postgres database automatically
 - **Image uploads** — drag-and-drop or click-to-select, stored in Backblaze B2 (optional)
@@ -47,6 +49,18 @@ Requires **Next.js ≥ 15** and **React ≥ 19**.
 DATABASE_URL=postgres://...    # Any Postgres database (Neon, Supabase, Railway, local)
 AUTH_SECRET=...                # Random secret — run: openssl rand -base64 32
 
+# Optional — password reset emails via Brevo
+BREVO_API_KEY=your-brevo-api-key
+BREVO_SENDER_EMAIL=admin@example.com
+BREVO_SENDER_NAME=Your Site Name
+NEXT_EDITOR_APP_URL=https://your-site.com
+
+# Optional — login protection via Cloudflare Turnstile
+# Default behavior is ON. Set to false/off/0/no to disable.
+NEXT_EDITOR_TURNSTILE_ENABLED=true
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key
+TURNSTILE_SECRET_KEY=your-turnstile-secret-key
+
 # Optional — enables drag-and-drop image uploads via Backblaze B2
 B2_ENDPOINT=https://s3.us-west-002.backblazeb2.com
 B2_REGION=us-west-002
@@ -56,7 +70,7 @@ B2_APPLICATION_KEY=your-application-key
 B2_PUBLIC_BASE_URL=https://your-bucket.s3.us-west-002.backblazeb2.com
 ```
 
-`DATABASE_URL` and `AUTH_SECRET` are the only required variables. The database tables (`ne_users`, `ne_content`) are created automatically on first run — no migration step needed.
+`DATABASE_URL` and `AUTH_SECRET` are the only required variables. Password reset email delivery requires the Brevo variables. Turnstile defaults to enabled; if you do not provide real Turnstile keys, NextEditor falls back to Cloudflare's test keys so local/dev login flows do not break. The database tables (`ne_users`, `ne_content`, `ne_collection_entries`, `ne_password_reset_tokens`) are created automatically on first run — no migration step needed.
 
 ### 2. Mount the auth route
 
