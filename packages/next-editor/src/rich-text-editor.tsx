@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
+const STORAGE_KEY = "ne-admin-theme";
+
 export type UploadImageHandler = (file: File) => Promise<string>;
 
 export type RichTextEditorProps = {
@@ -11,6 +13,7 @@ export type RichTextEditorProps = {
   uploadImage?: UploadImageHandler;
   uploadUrl?: string;
   onChange?: (value: string) => void;
+  toolbarMode?: "default" | "minimal";
   shellClassName?: string;
   editorClassName?: string;
   loadingClassName?: string;
@@ -38,6 +41,7 @@ export function RichTextEditor({
   uploadImage,
   uploadUrl = "/api/uploads/image",
   onChange,
+  toolbarMode = "default",
   shellClassName,
   editorClassName,
   loadingClassName,
@@ -51,16 +55,25 @@ export function RichTextEditor({
   const themeStyle = useMemo<CSSProperties>(
     () => ({
       colorScheme: resolvedTheme,
-      color: "var(--ne-fg, var(--lexxy-color-ink))",
-      backgroundColor: "var(--ne-surface, var(--lexxy-color-canvas))",
-      ["--lexxy-color-canvas" as string]: "var(--ne-surface, var(--lexxy-color-ink-inverted))",
-      ["--lexxy-color-text" as string]: "var(--ne-fg, var(--lexxy-color-ink))",
-      ["--lexxy-color-ink" as string]: "var(--ne-fg, oklch(20% 0 0))",
-      ["--lexxy-color-ink-inverted" as string]: "var(--ne-bg, white)",
-      ["--lexxy-color-ink-medium" as string]: "var(--ne-muted, oklch(40% 0 0))",
-      ["--lexxy-color-ink-lighter" as string]: "var(--ne-border-strong, oklch(85% 0 0))",
-      ["--lexxy-color-ink-lightest" as string]: "var(--ne-surface-muted, oklch(96% 0 0))",
-      ["--lexxy-color-table-header-bg" as string]: "var(--ne-surface-muted, var(--lexxy-color-ink-lightest))",
+      color: "var(--ne-fg, var(--foreground, var(--lexxy-color-ink)))",
+      backgroundColor:
+        "var(--ne-surface, var(--surface, var(--lexxy-color-canvas)))",
+      ["--lexxy-color-canvas" as string]:
+        "var(--ne-surface, var(--surface, var(--lexxy-color-ink-inverted)))",
+      ["--lexxy-color-text" as string]:
+        "var(--ne-fg, var(--foreground, var(--lexxy-color-ink)))",
+      ["--lexxy-color-ink" as string]:
+        "var(--ne-fg, var(--foreground, oklch(20% 0 0)))",
+      ["--lexxy-color-ink-inverted" as string]:
+        "var(--ne-bg, var(--background, white))",
+      ["--lexxy-color-ink-medium" as string]:
+        "var(--ne-muted, var(--muted, oklch(40% 0 0)))",
+      ["--lexxy-color-ink-lighter" as string]:
+        "var(--ne-border-strong, var(--border-strong, oklch(85% 0 0)))",
+      ["--lexxy-color-ink-lightest" as string]:
+        "var(--ne-surface-muted, var(--surface-muted, oklch(96% 0 0)))",
+      ["--lexxy-color-table-header-bg" as string]:
+        "var(--ne-surface-muted, var(--surface-muted, var(--lexxy-color-ink-lightest)))",
       ["--lexxy-shadow" as string]: "var(--ne-shadow-soft, 0 2px 8px rgba(0, 0, 0, 0.1))",
     }),
     [resolvedTheme],
@@ -142,7 +155,11 @@ export function RichTextEditor({
 
   return (
     <div
-      className={joinClassNames("next-editor-lexxy", shellClassName)}
+      className={joinClassNames(
+        "next-editor-lexxy",
+        toolbarMode === "minimal" ? "next-editor-lexxy--minimal" : undefined,
+        shellClassName,
+      )}
       style={themeStyle}
     >
       <input type="hidden" name={name} value={html} />
@@ -214,11 +231,14 @@ function useResolvedNeTheme() {
       return;
     }
 
-    const root = document.documentElement;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
 
     const syncTheme = () => {
-      const configured = root.dataset.neTheme;
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      const configured =
+        stored === "light" || stored === "dark" || stored === "system"
+          ? stored
+          : document.documentElement.dataset.neTheme;
       const nextTheme =
         configured === "dark" || (configured === "system" && media.matches)
           ? "dark"
@@ -228,16 +248,12 @@ function useResolvedNeTheme() {
 
     syncTheme();
 
-    const observer = new MutationObserver(syncTheme);
-    observer.observe(root, {
-      attributes: true,
-      attributeFilter: ["data-ne-theme"],
-    });
     media.addEventListener("change", syncTheme);
+    window.addEventListener("storage", syncTheme);
 
     return () => {
-      observer.disconnect();
       media.removeEventListener("change", syncTheme);
+      window.removeEventListener("storage", syncTheme);
     };
   }, []);
 

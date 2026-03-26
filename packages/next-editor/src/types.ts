@@ -82,9 +82,18 @@ export type CollectionDefinition = {
   }>;
 };
 
+export type DashboardLinkDefinition = {
+  id: string;
+  title: string;
+  description?: string;
+  href: string;
+  openInNewTab?: boolean;
+};
+
 export type NextEditorConfig = {
   pages: PageDefinition[];
   collections?: CollectionDefinition[];
+  dashboardLinks?: DashboardLinkDefinition[];
 };
 
 export type CollectionStatus = "draft" | "published" | "scheduled";

@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { EditableImage, EditableText, useEditor } from "@makeablebrand/next-editor/client";
+import {
+  EditableImage,
+  EditableRegion,
+  EditableText,
+  useEditor,
+} from "@makeablebrand/next-editor/client";
 
 type DemoEditorApi = {
   getFieldValue: <T = unknown>(fieldId: string) => T | undefined;
@@ -45,12 +50,10 @@ export function HomePageView() {
               as="h1"
               className="mt-6 max-w-3xl text-5xl leading-[1.05] font-semibold text-zinc-950 md:text-7xl"
             >{null}</EditableText>
-            <EditableText
+            <EditableRichText
               fieldId="hero.subheading"
-              value=""
-              as="p"
-              className="mt-6 max-w-2xl text-lg leading-8 text-zinc-700"
-            >{null}</EditableText>
+              className="mt-6 max-w-2xl text-lg leading-8 text-zinc-700 [&_a]:underline [&_a]:underline-offset-4 [&_ol]:ml-6 [&_ol]:list-decimal [&_ol]:space-y-2 [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_ul]:ml-6 [&_ul]:list-disc [&_ul]:space-y-2"
+            />
           </div>
           <EditableImage
             fieldId="hero.image"
@@ -129,5 +132,25 @@ export function HomePageView() {
         </section>
       ) : null}
     </main>
+  );
+}
+
+function EditableRichText({
+  fieldId,
+  className,
+}: {
+  fieldId: string;
+  className?: string;
+}) {
+  const { getFieldValue } = useEditor() as DemoEditorApi;
+  const html = getFieldValue<string>(fieldId) ?? "";
+
+  return (
+    <EditableRegion fieldId={fieldId}>
+      <div
+        className={className}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </EditableRegion>
   );
 }

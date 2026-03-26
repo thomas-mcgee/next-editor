@@ -10,11 +10,18 @@
     "build": "npm run build --workspace=@makeablebrand/next-editor && npm run build --workspace=demo",
     "dev": "npm run dev --workspace=demo",
     "lint": "npm run lint --workspaces --if-present",
+    "postinstall": "npm run build --workspace=@makeablebrand/next-editor",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7"
+  },
+  "overrides": {
+    "picomatch": "^4.0.4",
+    "micromatch": {
+      "picomatch": "^2.3.2"
+    }
   }
 }

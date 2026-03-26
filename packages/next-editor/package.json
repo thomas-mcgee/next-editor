@@ -1,6 +1,6 @@
 {
   "name": "@makeablebrand/next-editor",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Drop-in CMS layer for custom Next.js sites.",
   "license": "MIT",
   "keywords": [

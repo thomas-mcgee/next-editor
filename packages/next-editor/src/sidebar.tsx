@@ -4,6 +4,7 @@ import type { CSSProperties, DragEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useEditor } from "./editor-context";
 import { useEditorThemeVars } from "./editor-theme";
+import { RichTextEditor } from "./rich-text-editor";
 import type { FieldDefinition } from "./types";
 
 function ImageUploadControl({
@@ -228,7 +229,21 @@ function FieldControl({ field }: { field: FieldDefinition }) {
         />
       ) : null}
 
-      {field.type === "richtext" || field.type === "embed" ? (
+      {field.type === "richtext" ? (
+        <RichTextEditor
+          name={field.id}
+          initialValue={String(currentValue ?? "")}
+          placeholder={field.placeholder ?? "Start writing..."}
+          toolbarMode="minimal"
+          onChange={(nextValue) => setFieldValue(field.id, nextValue)}
+          shellClassName="next-editor-sidebar-richtext"
+          editorClassName="next-editor-sidebar-richtext__editor"
+          loadingClassName="next-editor-sidebar-richtext__loading"
+          statusClassName="next-editor-sidebar-richtext__status"
+        />
+      ) : null}
+
+      {field.type === "embed" ? (
         <textarea
           value={String(currentValue ?? "")}
           onChange={(event) => setFieldValue(field.id, event.target.value)}

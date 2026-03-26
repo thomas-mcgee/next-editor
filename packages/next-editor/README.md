@@ -48,6 +48,7 @@ import {
   dateTime,
   defineCollection,
   defineConfig,
+  defineDashboardLink,
   definePage,
   embed,
   image,
@@ -86,6 +87,13 @@ export const homePage = definePage({
 
 export const nextEditorConfig = defineConfig({
   pages: [homePage],
+  dashboardLinks: [
+    defineDashboardLink({
+      title: "Site Analytics",
+      description: "Open the reporting dashboard for this project.",
+      href: "https://example.com/analytics",
+    }),
+  ],
   collections: [
     defineCollection({
       id: "posts",
@@ -140,6 +148,8 @@ export const nextEditorConfig = defineConfig({
 ```
 
 `definePage` automatically appends an SEO section (meta title, description, Open Graph, Twitter card fields) unless you pass `includeSeoSection: false`.
+
+`dashboardLinks` are optional dashboard cards rendered above collections in the admin home screen. They are intended for external resources like analytics, project communication, status pages, or client portals. They open in a new tab by default unless you set `openInNewTab: false`.
 
 Every collection automatically gets publication controls in admin:
 

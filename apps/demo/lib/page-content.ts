@@ -7,7 +7,8 @@ const demoPageDefaults: Record<string, EditorPageValues> = {
     hero: {
       eyebrow: "Inline editing for custom client sites",
       heading: "Here is the New Headline!!",
-      subheading: "So here is where the new text will go!",
+      subheading:
+        "<p>So here is where the new text will go, now editable with <strong>Lexxy</strong> in the live sidebar.</p><ul><li>Add emphasis</li><li>Create links</li><li>Use bullet or numbered lists</li></ul>",
       image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
       theme: "linen",
     },

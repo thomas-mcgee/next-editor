@@ -2,6 +2,7 @@ import {
   dateTime,
   defineCollection,
   defineConfig,
+  defineDashboardLink,
   definePage,
   embed,
   image,
@@ -26,7 +27,7 @@ export const homePage = definePage({
       fields: [
         text({ id: "hero.eyebrow", label: "Eyebrow" }),
         text({ id: "hero.heading", label: "Heading" }),
-        textarea({ id: "hero.subheading", label: "Subheading" }),
+        richText({ id: "hero.subheading", label: "Subheading" }),
         image({ id: "hero.image", label: "Hero image" }),
         select({
           id: "hero.theme",
@@ -184,6 +185,13 @@ export const eventsCollection = defineCollection({
 export const nextEditorConfig = defineConfig({
   pages: Object.values(pageRegistry),
   collections: [postsCollection, eventsCollection],
+  dashboardLinks: [
+    defineDashboardLink({
+      title: "NextEditor Repository",
+      description: "View the source code, issues, and package development history.",
+      href: "https://github.com/thomas-mcgee/next-editor",
+    }),
+  ],
 });
 
 export type DemoPageId = keyof typeof pageRegistry;

@@ -2,6 +2,7 @@ import type {
   BaseFieldDefinition,
   CollectionDefinition,
   CollectionFieldDefinition,
+  DashboardLinkDefinition,
   FieldDefinition,
   FieldOption,
   NextEditorConfig,
@@ -30,6 +31,14 @@ type DefineCollectionInput = {
     label: string;
     fields: CollectionFieldDefinition[];
   }>;
+};
+
+type DefineDashboardLinkInput = {
+  id?: string;
+  title: string;
+  description?: string;
+  href: string;
+  openInNewTab?: boolean;
 };
 
 function createField<T extends CollectionFieldDefinition>(
@@ -219,13 +228,40 @@ export function defineCollection(input: DefineCollectionInput): CollectionDefini
   };
 }
 
+export function defineDashboardLink(input: DefineDashboardLinkInput): DashboardLinkDefinition {
+  return {
+    id: input.id ?? inferDashboardLinkId(input.title, input.href),
+    title: input.title,
+    description: input.description,
+    href: input.href,
+    openInNewTab: input.openInNewTab ?? true,
+  };
+}
+
 export function defineConfig(input: NextEditorConfig): NextEditorConfig {
   return {
     pages: input.pages,
     collections: input.collections ?? [],
+    dashboardLinks: input.dashboardLinks ?? [],
   };
 }
 
 function inferPagePath(id: string) {
   return id === "home" ? "/" : `/${id}`;
+}
+
+function inferDashboardLinkId(title: string, href: string) {
+  const base = title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  if (base) return base;
+
+  return href
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "dashboard-link";
 }

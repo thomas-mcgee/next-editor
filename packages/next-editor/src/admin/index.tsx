@@ -38,6 +38,7 @@ async function NextEditorAdminPage({
   const [{ slug = [] }, query] = await Promise.all([params, searchParams]);
   const path = slug.join("/");
   const collections = config.collections ?? [];
+  const dashboardLinks = config.dashboardLinks ?? [];
   const [firstSegment, secondSegment, thirdSegment] = slug;
 
   // ── Setup (no auth required, only when no users exist) ───────────────────
@@ -128,7 +129,14 @@ async function NextEditorAdminPage({
   } else if (path === "settings") {
     pageContent = <NeSettingsPage />;
   } else {
-    pageContent = <NeDashboardPage userName={user!.name} pages={config.pages} collections={collections} />;
+    pageContent = (
+      <NeDashboardPage
+        userName={user!.name}
+        pages={config.pages}
+        collections={collections}
+        dashboardLinks={dashboardLinks}
+      />
+    );
   }
 
   return (

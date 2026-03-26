@@ -685,6 +685,92 @@
   }
 }
 
+.next-editor-lexxy--minimal {
+  lexxy-toolbar {
+    button[name="image"],
+    button[name="file"],
+    summary[name="format"],
+    summary[name="highlight"],
+    button[name="quote"],
+    button[name="code"],
+    button[name="table"],
+    button[name="divider"],
+    .lexxy-editor__toolbar-spacer,
+    button[name="undo"],
+    button[name="redo"],
+    .lexxy-editor__toolbar-overflow {
+      display: none;
+    }
+
+    button[name="ordered-list"] {
+      display: none;
+    }
+  }
+}
+
+.next-editor-sidebar-richtext {
+  border: 1px solid var(--border-strong, #d4d4d8);
+  border-radius: 10px;
+  overflow: clip;
+  background: var(--surface, #ffffff);
+}
+
+.next-editor-sidebar-richtext__editor {
+  min-block-size: 160px;
+
+  .lexxy-editor__content ul,
+  .lexxy-editor__content ol {
+    margin-inline-start: 1.5rem;
+    padding-inline-start: 0.5rem;
+  }
+
+  .lexxy-editor__content ul {
+    list-style: disc;
+  }
+
+  .lexxy-editor__content ol {
+    list-style: decimal;
+  }
+
+  .lexxy-editor__content li::marker {
+    color: var(--foreground, #18181b);
+  }
+
+  .lexxy-editor__content ::selection {
+    background: color-mix(in oklab, var(--foreground, #18181b) 28%, transparent);
+    color: inherit;
+  }
+}
+
+.next-editor-sidebar-richtext__loading {
+  min-block-size: 160px;
+  display: grid;
+  place-items: center;
+  color: var(--muted, #71717a);
+  font-size: 13px;
+}
+
+.next-editor-sidebar-richtext__status {
+  margin: 0;
+  padding: 8px 12px 12px;
+  color: var(--muted, #71717a);
+  font-size: 12px;
+}
+
+.next-editor-sidebar-richtext {
+  .lexxy-editor__toolbar-button[aria-pressed="true"],
+  .lexxy-editor__toolbar-dropdown[open] > .lexxy-editor__toolbar-button {
+    background: var(--foreground, #18181b);
+    color: var(--background, #ffffff);
+  }
+
+  .lexxy-editor__toolbar-button[aria-pressed="true"]:hover,
+  .lexxy-editor__toolbar-dropdown[open] > .lexxy-editor__toolbar-button:hover {
+    background: var(--foreground, #18181b);
+    color: var(--background, #ffffff);
+  }
+}
+
 /* --------------------------------------------------------------------------
 /* Floating controls */
 :where(.lexxy-floating-controls) {

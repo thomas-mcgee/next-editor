@@ -1,5 +1,11 @@
 # @makeablebrand/next-editor
 
+## 0.1.5
+
+### Patch Changes
+
+- Add configurable admin dashboard links, improve the live-site rich text sidebar editor with a stripped-down Lexxy toolbar, and update transitive dependency overrides to address audit vulnerabilities.
+
 ## 0.1.4
 
 ### Patch Changes
