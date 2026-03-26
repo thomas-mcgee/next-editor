@@ -1,5 +1,11 @@
 # @makeablebrand/next-editor
 
+## 0.1.6
+
+### Patch Changes
+
+- Republish the prepared release changes at the next available patch version.
+
 ## 0.1.5
 
 ### Patch Changes
