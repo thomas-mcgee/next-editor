@@ -1,5 +1,11 @@
 # @makeablebrand/next-editor
 
+## 0.1.7
+
+### Patch Changes
+
+- Add incoming collection support for public form submissions, restore grouped admin navigation with admin-only Material Symbols icons, and document the new package APIs and setup requirements.
+
 ## 0.1.6
 
 ### Patch Changes

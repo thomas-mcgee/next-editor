@@ -9,6 +9,7 @@ const external = [
   "bcryptjs",
   "@aws-sdk/client-s3",
   "@37signals/lexxy",
+  "@material-symbols-svg/react",
 ];
 
 export default defineConfig([
@@ -75,6 +76,7 @@ export default defineConfig([
       "src/admin/users-new.tsx",
       "src/admin/account.tsx",
       "src/admin/settings.tsx",
+      "src/admin/components/icons.ts",
       // Auth + content sub-modules imported by the admin components
       "src/auth/config.ts",
       "src/auth/actions.ts",

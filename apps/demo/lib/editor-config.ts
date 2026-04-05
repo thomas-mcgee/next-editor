@@ -182,9 +182,48 @@ export const eventsCollection = defineCollection({
   ],
 });
 
+export const contactSubmissionsCollection = defineCollection({
+  id: "contact-submissions",
+  label: "Contact Submissions",
+  singularLabel: "Submission",
+  description: "Incoming contact-form submissions captured from the public site.",
+  mode: "incoming",
+  useAsTitle: "name",
+  incoming: {
+    enableReadTracking: true,
+    statuses: [
+      { label: "New", value: "new" },
+      { label: "Contacted", value: "contacted" },
+      { label: "Resolved", value: "resolved" },
+    ],
+    defaultStatus: "new",
+  },
+  sections: [
+    {
+      id: "contact",
+      label: "Contact Details",
+      fields: [
+        text({ id: "name", label: "Name" }),
+        text({ id: "email", label: "Email" }),
+        text({ id: "phone", label: "Phone" }),
+        select({
+          id: "topic",
+          label: "Topic",
+          options: [
+            { label: "General", value: "general" },
+            { label: "Sales", value: "sales" },
+            { label: "Support", value: "support" },
+          ],
+        }),
+        textarea({ id: "message", label: "Message" }),
+      ],
+    },
+  ],
+});
+
 export const nextEditorConfig = defineConfig({
   pages: Object.values(pageRegistry),
-  collections: [postsCollection, eventsCollection],
+  collections: [postsCollection, eventsCollection, contactSubmissionsCollection],
   dashboardLinks: [
     defineDashboardLink({
       title: "NextEditor Repository",

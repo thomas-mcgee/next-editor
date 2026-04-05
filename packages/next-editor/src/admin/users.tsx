@@ -1,6 +1,7 @@
 "use client";
 
 import type { User } from "../auth/user-store";
+import { AddIcon, DeleteIcon } from "./components/icons";
 
 const cell: React.CSSProperties = { padding: "12px 16px", fontSize: 13 };
 
@@ -26,9 +27,12 @@ export function NeUsersPage({
         </div>
         <a
           href="/admin/users/new"
-          style={{ borderRadius: 10, border: "1px solid var(--ne-border-strong)", background: "var(--ne-surface)", color: "var(--ne-fg)", padding: "8px 16px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 10, border: "1px solid var(--ne-border-strong)", background: "var(--ne-surface)", color: "var(--ne-fg)", padding: "8px 16px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
         >
-          Add User
+          <span style={{ display: "inline-flex", color: "var(--ne-fg)" }}>
+            <AddIcon size={18} />
+          </span>
+          <span>Add User</span>
         </a>
       </div>
 
@@ -64,10 +68,13 @@ export function NeUsersPage({
                       <input type="hidden" name="userId" value={user.id} />
                       <button
                         type="submit"
-                        style={{ background: "none", border: 0, padding: 0, fontSize: 13, color: "var(--ne-muted)", cursor: "pointer" }}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: 0, padding: 0, fontSize: 13, color: "var(--ne-muted)", cursor: "pointer" }}
                         onClick={(e) => { if (!confirm(`Delete ${user.name}?`)) e.preventDefault(); }}
                       >
-                        Delete
+                        <span style={{ display: "inline-flex", color: "var(--ne-muted)" }}>
+                          <DeleteIcon size={16} />
+                        </span>
+                        <span>Delete</span>
                       </button>
                     </form>
                   )}

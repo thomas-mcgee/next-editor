@@ -17,6 +17,12 @@ export type FieldOption = {
   value: string;
 };
 
+export type IncomingCollectionConfig = {
+  enableReadTracking?: boolean;
+  statuses?: FieldOption[];
+  defaultStatus?: string;
+};
+
 export type BaseFieldDefinition = {
   id: string;
   label: string;
@@ -74,6 +80,8 @@ export type CollectionDefinition = {
   singularLabel?: string;
   path?: string;
   description?: string;
+  mode?: "incoming";
+  incoming?: IncomingCollectionConfig;
   useAsTitle?: string;
   sections: Array<{
     id: string;
@@ -96,7 +104,7 @@ export type NextEditorConfig = {
   dashboardLinks?: DashboardLinkDefinition[];
 };
 
-export type CollectionStatus = "draft" | "published" | "scheduled";
+export type CollectionStatus = string;
 
 export type CollectionEntryRecord = {
   collectionId: string;

@@ -1,6 +1,6 @@
 # NextEditor
 
-`@makeablebrand/next-editor` is a drop-in CMS layer for custom Next.js sites. It handles authentication, user management, an admin panel, and a live-site editing experience — everything you need to replace WordPress without giving up control of your code.
+`@makeablebrand/next-editor` is a drop-in CMS layer for custom Next.js sites. It handles authentication, user management, an admin panel, incoming-form intake, and a live-site editing experience — everything you need to replace WordPress without giving up control of your code.
 
 **The intended workflow:**
 
@@ -25,6 +25,7 @@ Your client gets login-protected, live-site content editing. You keep full contr
 - **Bot protection** — Cloudflare Turnstile on the login form with a disable flag and test-key fallback
 - **User roles** — Admin (content editing + user management) and Editor (content editing only)
 - **Content storage** — page values saved to your Postgres database automatically
+- **Incoming collections** — public form submissions can be saved into admin-visible intake collections
 - **Image uploads** — drag-and-drop or click-to-select, stored in Backblaze B2 (optional)
 - **Rich text** — built-in rich text editor via Lexxy
 
@@ -81,7 +82,7 @@ export { GET, POST } from "@makeablebrand/next-editor/auth";
 
 ### 3. Define your editable pages
 
-Create your page and collection definitions in one place and export a NextEditor config. Pages are a built-in content type and always appear in the admin when they are included in this config. Collections add custom content types such as posts, events, announcements, or landing pages.
+Create your page and collection definitions in one place and export a NextEditor config. Pages are a built-in content type and always appear in the admin when they are included in this config. Collections add custom content types such as posts, events, announcements, landing pages, or incoming submissions.
 
 ```ts
 // lib/editor-config.ts
@@ -180,13 +181,45 @@ export const nextEditorConfig = defineConfig({
 });
 ```
 
-Every collection gets built-in publication metadata in admin:
+Standard collections get built-in publication metadata in admin:
 
 - `status`: `draft`, `published`, or `scheduled`
 - `slug`: optional URL slug
 - `publishedAt`: publish/schedule date and time
 
 Collections do not require a title field. If you want a human-friendly label in admin lists, set `useAsTitle` to one of your field ids.
+
+Incoming collections are also supported for contact forms, assessments, lead capture, and other public-site submissions:
+
+```ts
+const contactSubmissions = defineCollection({
+  id: "contact-submissions",
+  label: "Contact Submissions",
+  singularLabel: "Submission",
+  mode: "incoming",
+  useAsTitle: "name",
+  incoming: {
+    statuses: [
+      { label: "New", value: "new" },
+      { label: "Contacted", value: "contacted" },
+      { label: "Resolved", value: "resolved" },
+    ],
+    defaultStatus: "new",
+  },
+  sections: [
+    {
+      id: "contact",
+      label: "Contact Details",
+      fields: [
+        text({ id: "name", label: "Name" }),
+        text({ id: "email", label: "Email" }),
+        text({ id: "phone", label: "Phone" }),
+        textarea({ id: "message", label: "Message" }),
+      ],
+    },
+  ],
+});
+```
 
 ### Page import template and importer
 
@@ -258,6 +291,24 @@ import { nextEditorConfig } from "@/lib/editor-config";
 export default createAdminPage(nextEditorConfig);
 ```
 
+### `next.config.ts` for the admin panel
+
+If you mount the built-in admin UI, add:
+
+```ts
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: ["@material-symbols-svg/react"],
+  },
+};
+
+export default nextConfig;
+```
+
+This keeps development-time module resolution fast for the admin icon package. The icons remain admin-only and do not belong in any public route import graph.
+
 ### 5. Import styles
 
 ```ts
@@ -320,6 +371,33 @@ export { GET, POST } from "@makeablebrand/next-editor/handlers";
 
 This single file handles both `/api/ne/content` (save/load page values) and `/api/ne/upload` (B2 image upload).
 
+### Save public form submissions into an incoming collection
+
+Incoming collections are written by your app code, not by the built-in `/api/ne/*` handler. Use the server helper from your own route:
+
+```ts
+// app/api/contact/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { createIncomingCollectionEntry } from "@makeablebrand/next-editor/server";
+import { nextEditorConfig } from "@/lib/editor-config";
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+
+  await createIncomingCollectionEntry(nextEditorConfig, {
+    collectionId: "contact-submissions",
+    values: {
+      name: body.name ?? "",
+      email: body.email ?? "",
+      phone: body.phone ?? "",
+      message: body.message ?? "",
+    },
+  });
+
+  return NextResponse.json({ ok: true });
+}
+```
+
 ### Import page content from JSON
 
 Create a script in your app to run the import:
@@ -366,10 +444,18 @@ Recommended sequence:
 Use the server helpers from `@makeablebrand/next-editor/server` in your own routes/pages:
 
 ```ts
-import { listPublishedEntries, getPublishedEntryBySlug } from "@makeablebrand/next-editor/server";
+import {
+  createIncomingCollectionEntry,
+  getPublishedEntryBySlug,
+  listPublishedEntries,
+} from "@makeablebrand/next-editor/server";
 
 const posts = await listPublishedEntries("posts");
 const event = await getPublishedEntryBySlug("events", slug);
+await createIncomingCollectionEntry(nextEditorConfig, {
+  collectionId: "contact-submissions",
+  values: { name: "Ada Lovelace", email: "ada@example.com" },
+});
 ```
 
 ### Mark editable elements

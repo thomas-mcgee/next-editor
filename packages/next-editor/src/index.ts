@@ -23,6 +23,7 @@ export type {
   EditorPageValues,
   EditorViewportProps,
   FieldDefinition,
+  IncomingCollectionConfig,
   NextEditorConfig,
   PageDefinition,
   PageSectionDefinition,

@@ -18,14 +18,34 @@ export async function neSaveCollectionEntryAction(formData: FormData) {
   const { userId } = await requireEditor();
 
   const collectionId = String(formData.get("collectionId") ?? "").trim();
+  const collectionMode = String(formData.get("collectionMode") ?? "").trim();
   const entryId = String(formData.get("entryId") ?? "").trim() || randomUUID();
   const slug = String(formData.get("slug") ?? "").trim() || null;
   const status = String(formData.get("status") ?? "draft") as CollectionStatus;
   const publishedAtRaw = String(formData.get("publishedAt") ?? "").trim();
   const valuesRaw = String(formData.get("values") ?? "{}");
+  const allowedStatusesRaw = String(formData.get("allowedStatuses") ?? "[]");
 
   if (!collectionId) redirect("/admin");
-  if (!["draft", "published", "scheduled"].includes(status)) {
+
+  let allowedStatuses: string[] = [];
+  try {
+    const parsed = JSON.parse(allowedStatusesRaw) as unknown;
+    if (Array.isArray(parsed)) {
+      allowedStatuses = parsed.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+    }
+  } catch {
+    allowedStatuses = [];
+  }
+
+  const statusOptions =
+    allowedStatuses.length > 0
+      ? allowedStatuses
+      : collectionMode === "incoming"
+        ? ["new", "resolved"]
+        : ["draft", "published", "scheduled"];
+
+  if (!statusOptions.includes(status)) {
     redirect(`/admin/collections/${collectionId}?status=invalid`);
   }
 
@@ -39,9 +59,9 @@ export async function neSaveCollectionEntryAction(formData: FormData) {
   await saveCollectionEntry({
     collectionId,
     entryId,
-    slug,
+    slug: collectionMode === "incoming" ? null : slug,
     status,
-    publishedAt: publishedAtRaw || null,
+    publishedAt: collectionMode === "incoming" ? null : publishedAtRaw || null,
     values,
     updatedBy: userId,
   });

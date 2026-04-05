@@ -5,6 +5,7 @@ import type {
   DashboardLinkDefinition,
   FieldDefinition,
   FieldOption,
+  IncomingCollectionConfig,
   NextEditorConfig,
   PageDefinition,
   PageSectionDefinition,
@@ -25,6 +26,8 @@ type DefineCollectionInput = {
   singularLabel?: string;
   path?: string;
   description?: string;
+  mode?: "incoming";
+  incoming?: IncomingCollectionConfig;
   useAsTitle?: string;
   sections: Array<{
     id: string;
@@ -217,6 +220,15 @@ export function defineCollection(input: DefineCollectionInput): CollectionDefini
     singularLabel: input.singularLabel,
     path: input.path,
     description: input.description,
+    mode: input.mode,
+    incoming:
+      input.mode === "incoming"
+        ? {
+            enableReadTracking: input.incoming?.enableReadTracking ?? false,
+            statuses: input.incoming?.statuses ?? [],
+            defaultStatus: input.incoming?.defaultStatus ?? input.incoming?.statuses?.[0]?.value ?? "new",
+          }
+        : undefined,
     useAsTitle: input.useAsTitle,
     sections: input.sections.map((section) => ({
       ...section,

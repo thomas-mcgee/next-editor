@@ -116,10 +116,11 @@ export function createCollectionImportTemplate(
   options: CreateCollectionImportTemplateOptions = {},
 ): CollectionImportDocument {
   const collection = getCollectionDefinition(config, collectionId);
+  const defaultStatus = getDefaultCollectionStatus(collection);
   const entries =
     options.entries && options.entries.length > 0
       ? options.entries
-      : [{ entryId: `${collection.id}-entry-1`, status: "draft" as const, publishedAt: null }];
+      : [{ entryId: `${collection.id}-entry-1`, status: defaultStatus, publishedAt: null }];
 
   return {
     version: 1,
@@ -127,8 +128,8 @@ export function createCollectionImportTemplate(
     entries: entries.map((entry) => ({
       entryId: entry.entryId,
       slug: entry.slug ?? null,
-      status: entry.status ?? "draft",
-      publishedAt: entry.publishedAt ?? null,
+      status: entry.status ?? defaultStatus,
+      publishedAt: collection.mode === "incoming" ? null : (entry.publishedAt ?? null),
       values: buildCollectionTemplateValues(collection),
     })),
   };
@@ -235,6 +236,7 @@ export function validateCollectionImportDocument(
   }
 
   const collection = collectionId ? findCollectionDefinition(config, collectionId) : null;
+  const allowedStatuses = collection ? getAllowedCollectionStatuses(collection) : ["draft", "published", "scheduled"];
   if (collectionId && !collection) {
     errors.push(`Collection "${collectionId}" is not registered in the provided NextEditor config.`);
   }
@@ -271,14 +273,9 @@ export function validateCollectionImportDocument(
     }
 
     const hasStatus = Object.prototype.hasOwnProperty.call(entry, "status");
-    if (
-      hasStatus &&
-      entry.status !== "draft" &&
-      entry.status !== "published" &&
-      entry.status !== "scheduled"
-    ) {
+    if (hasStatus && (typeof entry.status !== "string" || !allowedStatuses.includes(entry.status))) {
       errors.push(
-        `Collection entry "${entryId}" has an invalid "status". Expected "draft", "published", or "scheduled".`,
+        `Collection entry "${entryId}" has an invalid "status". Expected one of: ${allowedStatuses.join(", ")}.`,
       );
     }
 
@@ -354,6 +351,7 @@ export async function importCollection(
   const { config, mode = "replace", updatedBy = null } = options;
   const validatedDocument = validateCollectionImportDocument(options);
   const collection = getCollectionDefinition(config, validatedDocument.collectionId);
+  const defaultStatus = getDefaultCollectionStatus(collection);
   const rawEntries = Array.isArray(options.document.entries) ? options.document.entries : [];
   const normalizedEntryMap = new Map<string, NormalizedCollectionImportEntry>();
 
@@ -391,12 +389,12 @@ export async function importCollection(
           : (existing?.slug ?? null),
       status:
         normalizedEntry?.hasStatus
-          ? (normalizedEntry.status ?? "draft")
-          : (existing?.status ?? "draft"),
+          ? (normalizedEntry.status ?? defaultStatus)
+          : (existing?.status ?? defaultStatus),
       publishedAt:
         normalizedEntry?.hasPublishedAt
-          ? (normalizedEntry.publishedAt ?? null)
-          : (existing?.publishedAt ?? null),
+          ? (collection.mode === "incoming" ? null : (normalizedEntry.publishedAt ?? null))
+          : (collection.mode === "incoming" ? null : (existing?.publishedAt ?? null)),
       values,
       updatedBy,
     });
@@ -654,6 +652,21 @@ function getCollectionDefinition(config: NextEditorConfig, collectionId: string)
     throw new Error(`Collection "${collectionId}" is not registered in the provided NextEditor config.`);
   }
   return collection;
+}
+
+function getAllowedCollectionStatuses(collection: CollectionDefinition) {
+  if (collection.mode === "incoming") {
+    const configured = collection.incoming?.statuses?.map((option) => option.value).filter(Boolean) ?? [];
+    return configured.length > 0 ? configured : ["new", "resolved"];
+  }
+
+  return ["draft", "published", "scheduled"];
+}
+
+function getDefaultCollectionStatus(collection: CollectionDefinition) {
+  return collection.mode === "incoming"
+    ? collection.incoming?.defaultStatus ?? getAllowedCollectionStatuses(collection)[0] ?? "new"
+    : "draft";
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

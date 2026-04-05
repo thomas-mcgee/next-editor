@@ -23,8 +23,12 @@ type Props = {
 };
 
 export function NeCollectionEntryForm({ collection, entry, saveAction }: Props) {
+  const isIncoming = collection.mode === "incoming";
+  const statusOptions = getStatusOptions(collection);
   const [activeTab, setActiveTab] = useState<"content" | "publication">("content");
-  const [status, setStatus] = useState<CollectionStatus>(entry?.status ?? "draft");
+  const [status, setStatus] = useState<CollectionStatus>(
+    entry?.status ?? collection.incoming?.defaultStatus ?? statusOptions[0]?.value ?? "draft",
+  );
   const [slug, setSlug] = useState(entry?.slug ?? "");
   const [publishedAt, setPublishedAt] = useState(formatDateTimeLocal(entry?.publishedAt));
   const [values, setValues] = useState<Record<string, unknown>>(entry?.values ?? {});
@@ -34,8 +38,8 @@ export function NeCollectionEntryForm({ collection, entry, saveAction }: Props) 
       const candidate = getStringValue(values[collection.useAsTitle]);
       if (candidate) return candidate;
     }
-    return slug || entry?.entryId || `New ${collection.singularLabel ?? collection.label}`;
-  }, [collection.label, collection.singularLabel, collection.useAsTitle, entry?.entryId, slug, values]);
+    return (isIncoming ? entry?.entryId : slug) || entry?.entryId || `New ${collection.singularLabel ?? collection.label}`;
+  }, [collection.label, collection.singularLabel, collection.useAsTitle, entry?.entryId, isIncoming, slug, values]);
 
   return (
     <section>
@@ -62,11 +66,17 @@ export function NeCollectionEntryForm({ collection, entry, saveAction }: Props) 
         }}
       >
         <TabButton active={activeTab === "content"} label="Content" onClick={() => setActiveTab("content")} />
-        <TabButton active={activeTab === "publication"} label="Publication" onClick={() => setActiveTab("publication")} />
+        <TabButton
+          active={activeTab === "publication"}
+          label={isIncoming ? "Workflow" : "Publication"}
+          onClick={() => setActiveTab("publication")}
+        />
       </div>
 
       <form action={saveAction} style={{ marginTop: 24, display: "grid", gap: 18, maxWidth: 900 }}>
         <input type="hidden" name="collectionId" value={collection.id} />
+        <input type="hidden" name="collectionMode" value={collection.mode ?? ""} />
+        <input type="hidden" name="allowedStatuses" value={JSON.stringify(statusOptions.map((option) => option.value))} />
         <input type="hidden" name="entryId" value={entry?.entryId ?? ""} />
         <input type="hidden" name="status" value={status} />
         <input type="hidden" name="slug" value={slug} />
@@ -118,24 +128,50 @@ export function NeCollectionEntryForm({ collection, entry, saveAction }: Props) 
           >
             <FieldShell label="Status">
               <select value={status} onChange={(event) => setStatus(event.target.value as CollectionStatus)} style={inputStyle()}>
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-                <option value="scheduled">Scheduled</option>
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </FieldShell>
 
-            <FieldShell label="Slug">
-              <input type="text" value={slug} onChange={(event) => setSlug(event.target.value)} style={inputStyle()} />
-            </FieldShell>
+            {isIncoming ? (
+              <>
+                <FieldShell label="Entry ID">
+                  <input
+                    type="text"
+                    value={entry?.entryId ?? "Will be generated automatically"}
+                    readOnly
+                    style={inputStyle({ color: "var(--ne-muted)" })}
+                  />
+                </FieldShell>
 
-            <FieldShell label={status === "scheduled" ? "Scheduled for" : "Publish date & time"}>
-              <input
-                type="datetime-local"
-                value={publishedAt}
-                onChange={(event) => setPublishedAt(event.target.value)}
-                style={inputStyle()}
-              />
-            </FieldShell>
+                <FieldShell label="Submitted">
+                  <input
+                    type="text"
+                    value={entry ? formatDateTimeDisplay(entry.createdAt) : "Created when a visitor submits the form"}
+                    readOnly
+                    style={inputStyle({ color: "var(--ne-muted)" })}
+                  />
+                </FieldShell>
+              </>
+            ) : (
+              <>
+                <FieldShell label="Slug">
+                  <input type="text" value={slug} onChange={(event) => setSlug(event.target.value)} style={inputStyle()} />
+                </FieldShell>
+
+                <FieldShell label={status === "scheduled" ? "Scheduled for" : "Publish date & time"}>
+                  <input
+                    type="datetime-local"
+                    value={publishedAt}
+                    onChange={(event) => setPublishedAt(event.target.value)}
+                    style={inputStyle()}
+                  />
+                </FieldShell>
+              </>
+            )}
           </div>
         )}
 
@@ -144,7 +180,7 @@ export function NeCollectionEntryForm({ collection, entry, saveAction }: Props) 
             type="submit"
             style={{ borderRadius: 10, border: 0, background: "var(--ne-fg)", color: "var(--ne-bg)", padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
           >
-            Save {collection.singularLabel ?? collection.label}
+            {isIncoming ? "Update Submission" : `Save ${collection.singularLabel ?? collection.label}`}
           </button>
           <a href={`/admin/collections/${collection.id}`} style={{ fontSize: 13, color: "var(--ne-muted)", textDecoration: "none" }}>
             Cancel
@@ -533,6 +569,18 @@ function formatDateTimeLocal(value: string | null | undefined) {
   return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
 }
 
+function formatDateTimeDisplay(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function formatInputValue(type: CollectionFieldDefinition["type"], value: unknown) {
   if (type === "dateTime") return formatDateTimeLocal(getStringValue(value));
   return String(value ?? "");
@@ -540,4 +588,22 @@ function formatInputValue(type: CollectionFieldDefinition["type"], value: unknow
 
 function getStringValue(value: unknown) {
   return typeof value === "string" ? value : "";
+}
+
+function getStatusOptions(collection: CollectionDefinition) {
+  if (collection.mode === "incoming") {
+    const incomingStatuses = collection.incoming?.statuses?.filter((option) => option.value.trim().length > 0) ?? [];
+    return incomingStatuses.length > 0
+      ? incomingStatuses
+      : [
+          { label: "New", value: "new" },
+          { label: "Resolved", value: "resolved" },
+        ];
+  }
+
+  return [
+    { label: "Draft", value: "draft" },
+    { label: "Published", value: "published" },
+    { label: "Scheduled", value: "scheduled" },
+  ];
 }

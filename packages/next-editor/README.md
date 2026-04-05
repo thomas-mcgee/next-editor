@@ -1,6 +1,6 @@
 # @makeablebrand/next-editor
 
-A lightweight, code-first CMS layer for custom Next.js sites. Define editable fields directly in your page code, give editors a floating control bar and sidebar to make changes on the live site, and ship with built-in auth, admin, and content handlers.
+A lightweight, code-first CMS layer for custom Next.js sites. Define editable fields directly in your page code, give editors a floating control bar and sidebar to make changes on the live site, and ship with built-in auth, admin, incoming-form intake, and content handlers.
 
 There is no hosted service, no visual page builder, and no database vendor lock-in. Your page structure stays in code. Editors change a controlled set of fields without touching anything else.
 
@@ -159,6 +159,39 @@ Every collection automatically gets publication controls in admin:
 
 Collections do not require a `title` field. If you want a specific field to be used as the admin label, set `useAsTitle`.
 
+Incoming collections are also supported for public-site form submissions. They use the same collection storage layer, but they are treated as non-publishable records in admin and can expose custom workflow statuses:
+
+```ts
+const consultationSubmissions = defineCollection({
+  id: "consultation-submissions",
+  label: "Consultation Submissions",
+  singularLabel: "Submission",
+  mode: "incoming",
+  useAsTitle: "name",
+  incoming: {
+    enableReadTracking: true,
+    statuses: [
+      { label: "New", value: "new" },
+      { label: "In Progress", value: "in-progress" },
+      { label: "Resolved", value: "resolved" },
+    ],
+    defaultStatus: "new",
+  },
+  sections: [
+    {
+      id: "contact",
+      label: "Contact Details",
+      fields: [
+        text({ id: "name", label: "Full Name" }),
+        text({ id: "email", label: "Email Address" }),
+        text({ id: "phone", label: "Phone Number" }),
+        textarea({ id: "message", label: "Message" }),
+      ],
+    },
+  ],
+});
+```
+
 ### Import templates and importers
 
 NextEditor ships import helpers at `@makeablebrand/next-editor/import` for both page content and custom collections. Page imports validate against your registered page definitions, including the auto-generated SEO section, and write each payload into `ne_content`.
@@ -212,7 +245,7 @@ The generated file uses this shape:
 }
 ```
 
-Collection imports use a collection-specific document shape and validate every entry against the target collection's configured fields, including repeaters plus the built-in publication metadata (`slug`, `status`, and `publishedAt`). The package also ships a generic reference template at `@makeablebrand/next-editor/templates/collection-import.template.json`, but for a real site you should generate a config-specific template for the collection you want to import:
+Collection imports use a collection-specific document shape and validate every entry against the target collection's configured fields, including repeaters plus the collection metadata (`status`, and for publishable collections also `slug` and `publishedAt`). The package also ships a generic reference template at `@makeablebrand/next-editor/templates/collection-import.template.json`, but for a real site you should generate a config-specific template for the collection you want to import:
 
 ```ts
 // scripts/generate-collection-import-template.ts
@@ -279,7 +312,7 @@ Collection import rules:
 - `entryId` must be unique within the import document.
 - `values` must match the collection field ids exactly, including repeater item fields.
 - `slug` must be a string or `null` when included.
-- `status` must be `draft`, `published`, or `scheduled` when included.
+- `status` must match the configured workflow for that collection.
 - `publishedAt` must be a string or `null` when included.
 
 ---
@@ -298,6 +331,22 @@ import { nextEditorConfig } from "@/lib/editor-config";
 
 export default createAdminPage(nextEditorConfig);
 ```
+
+If you use the built-in admin UI, add the following to your app's `next.config.ts` to keep dev-server module resolution fast when the admin imports Material Symbols:
+
+```ts
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: ["@material-symbols-svg/react"],
+  },
+};
+
+export default nextConfig;
+```
+
+The icon dependency is only used by the `@makeablebrand/next-editor/admin` export. Public page bundles do not include it unless you import admin modules from your frontend code.
 
 ```ts
 // app/api/ne/[...path]/route.ts
@@ -344,6 +393,35 @@ export default async function HomePage() {
 ```
 
 `EditorViewport` shifts the page content right when the sidebar opens. `FloatingAdminBar` renders the "Edit" / "Admin" floating button in the corner.
+
+### 3a. Save public form submissions into an incoming collection
+
+Incoming collections are intentionally app-owned at the route layer. Define the collection in your config, then create an app route that writes submissions with the package server helper:
+
+```ts
+// app/api/contact/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { createIncomingCollectionEntry } from "@makeablebrand/next-editor/server";
+import { nextEditorConfig } from "@/lib/editor-config";
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+
+  await createIncomingCollectionEntry(nextEditorConfig, {
+    collectionId: "consultation-submissions",
+    values: {
+      name: body.name ?? "",
+      email: body.email ?? "",
+      phone: body.phone ?? "",
+      message: body.message ?? "",
+    },
+  });
+
+  return NextResponse.json({ ok: true });
+}
+```
+
+That route is your app's responsibility, not a built-in package endpoint. The package provides the storage model, admin UI, and server helper so your public form submissions can land in `ne_collection_entries` without mixing intake concerns into the live-site editor API.
 
 ---
 
@@ -484,6 +562,7 @@ Use the package server helpers from your own pages and routes:
 
 ```ts
 import {
+  createIncomingCollectionEntry,
   getCollectionEntryById,
   getPublishedEntryBySlug,
   listCollectionEntries,
@@ -494,6 +573,10 @@ const allPosts = await listPublishedEntries("posts");
 const event = await getPublishedEntryBySlug("events", slug);
 const adminRows = await listCollectionEntries("posts");
 const draft = await getCollectionEntryById("posts", entryId);
+await createIncomingCollectionEntry(nextEditorConfig, {
+  collectionId: "consultation-submissions",
+  values: { name: "Ada Lovelace", email: "ada@example.com" },
+});
 ```
 
 ---

@@ -2,6 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import type { CollectionDefinition, CollectionEntryRecord } from "../types";
+import { AddIcon, DeleteIcon, ViewIcon } from "./components/icons";
 
 const cell: CSSProperties = { padding: "12px 16px", fontSize: 13 };
 
@@ -16,6 +17,10 @@ export function NeCollectionListPage({
   status?: string;
   deleteAction: (formData: FormData) => Promise<void>;
 }) {
+  const isIncoming = collection.mode === "incoming";
+  const showPublicLink = !isIncoming;
+  const columns = isIncoming ? ["Title", "Status", "Received", ""] : ["Title", "Slug", "Status", "Updated", ""];
+
   return (
     <section>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
@@ -25,16 +30,25 @@ export function NeCollectionListPage({
             {entries.length}
           </span>
         </div>
-        <a
-          href={`/admin/collections/${collection.id}/new`}
-          style={{ borderRadius: 10, border: "1px solid var(--ne-border-strong)", background: "var(--ne-surface)", color: "var(--ne-fg)", padding: "8px 16px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
-        >
-          Add {collection.singularLabel ?? "Entry"}
-        </a>
+        {!isIncoming ? (
+          <a
+            href={`/admin/collections/${collection.id}/new`}
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 10, border: "1px solid var(--ne-border-strong)", background: "var(--ne-surface)", color: "var(--ne-fg)", padding: "8px 16px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
+          >
+            <span style={{ display: "inline-flex", color: "var(--ne-fg)" }}>
+              <AddIcon size={18} />
+            </span>
+            <span>Add {collection.singularLabel ?? "Entry"}</span>
+          </a>
+        ) : null}
       </div>
 
       <p style={{ marginTop: 8, fontSize: 13, lineHeight: 1.6, color: "var(--ne-muted)", maxWidth: 720 }}>
-        {collection.description ?? `Manage ${collection.label.toLowerCase()} entries with collection-specific fields and publication controls.`}
+        {collection.description ?? (
+          isIncoming
+            ? `Review ${collection.label.toLowerCase()} submitted through your public-site intake flows.`
+            : `Manage ${collection.label.toLowerCase()} entries with collection-specific fields and publication controls.`
+        )}
       </p>
 
       {status === "saved" ? (
@@ -51,7 +65,7 @@ export function NeCollectionListPage({
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--ne-surface-muted)" }}>
-              {["Title", "Slug", "Status", "Updated", ""].map((header) => (
+              {columns.map((header) => (
                 <th key={header} style={{ ...cell, fontWeight: 600, color: "var(--ne-muted)", textAlign: "left" }}>{header}</th>
               ))}
             </tr>
@@ -59,8 +73,10 @@ export function NeCollectionListPage({
           <tbody>
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={5} style={{ ...cell, color: "var(--ne-muted)" }}>
-                  No entries yet. Create the first {collection.singularLabel?.toLowerCase() ?? "entry"}.
+                <td colSpan={columns.length} style={{ ...cell, color: "var(--ne-muted)" }}>
+                  {isIncoming
+                    ? `No submissions have arrived for ${collection.label.toLowerCase()} yet.`
+                    : `No entries yet. Create the first ${collection.singularLabel?.toLowerCase() ?? "entry"}.`}
                 </td>
               </tr>
             ) : (
@@ -74,17 +90,22 @@ export function NeCollectionListPage({
                       {getEntryTitle(collection, entry)}
                     </a>
                   </td>
-                  <td style={{ ...cell, color: "var(--ne-muted)" }}>{entry.slug ?? ""}</td>
-                  <td style={{ ...cell, color: "var(--ne-muted)", textTransform: "capitalize" }}>{entry.status}</td>
-                  <td style={{ ...cell, color: "var(--ne-muted)" }}>{formatDate(entry.updatedAt)}</td>
+                  {!isIncoming ? (
+                    <td style={{ ...cell, color: "var(--ne-muted)" }}>{entry.slug ?? ""}</td>
+                  ) : null}
+                  <td style={{ ...cell, color: "var(--ne-muted)", textTransform: "capitalize" }}>{formatStatus(entry.status)}</td>
+                  <td style={{ ...cell, color: "var(--ne-muted)" }}>{formatDate(isIncoming ? entry.createdAt : entry.updatedAt)}</td>
                   <td style={{ ...cell, textAlign: "right" }}>
                     <div style={{ display: "inline-flex", alignItems: "center", gap: 14 }}>
-                      {getEntryViewHref(collection, entry) ? (
+                      {showPublicLink && getEntryViewHref(collection, entry) ? (
                         <a
                           href={getEntryViewHref(collection, entry)!}
-                          style={{ fontSize: 13, color: "var(--ne-muted)", textDecoration: "none" }}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--ne-muted)", textDecoration: "none" }}
                         >
-                          View
+                          <span style={{ display: "inline-flex", color: "var(--ne-muted)" }}>
+                            <ViewIcon size={16} />
+                          </span>
+                          <span>View</span>
                         </a>
                       ) : null}
                       <form action={deleteAction}>
@@ -92,12 +113,15 @@ export function NeCollectionListPage({
                         <input type="hidden" name="entryId" value={entry.entryId} />
                         <button
                           type="submit"
-                          style={{ background: "none", border: 0, padding: 0, fontSize: 13, color: "var(--ne-muted)", cursor: "pointer" }}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: 0, padding: 0, fontSize: 13, color: "var(--ne-muted)", cursor: "pointer" }}
                           onClick={(event) => {
                             if (!confirm(`Delete ${getEntryTitle(collection, entry)}?`)) event.preventDefault();
                           }}
                         >
-                          Delete
+                          <span style={{ display: "inline-flex", color: "var(--ne-muted)" }}>
+                            <DeleteIcon size={16} />
+                          </span>
+                          <span>Delete</span>
                         </button>
                       </form>
                     </div>
@@ -153,4 +177,11 @@ function formatDate(value: string) {
     month: "short",
     day: "numeric",
   });
+}
+
+function formatStatus(value: string) {
+  return value
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }

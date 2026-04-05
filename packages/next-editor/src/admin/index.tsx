@@ -105,6 +105,7 @@ async function NextEditorAdminPage({
     if (!collection) redirect("/admin");
 
     if (thirdSegment === "new") {
+      if (collection.mode === "incoming") redirect(`/admin/collections/${collection.id}`);
       pageContent = <NeCollectionEntryForm collection={collection} saveAction={neSaveCollectionEntryAction} />;
     } else if (thirdSegment) {
       const entry = await getCollectionEntry(collection.id, thirdSegment);

@@ -4,6 +4,17 @@ import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import type { User } from "../auth/user-store";
 import type { CollectionDefinition } from "../types";
+import {
+  CollectionIcon,
+  DashboardIcon,
+  HomeIcon,
+  IncomingIcon,
+  LogoutIcon,
+  PageIcon,
+  PersonIcon,
+  SettingsIcon,
+  UsersIcon,
+} from "./components/icons";
 
 const s = {
   root: {
@@ -40,6 +51,7 @@ const s = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
     marginBottom: 10,
     borderRadius: 10,
     border: "1px solid var(--ne-border-strong)",
@@ -52,6 +64,9 @@ const s = {
     lineHeight: 1.2,
   } satisfies React.CSSProperties,
   navBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
     color: "var(--ne-fg)",
     textDecoration: "none",
     fontSize: 14,
@@ -78,32 +93,68 @@ export function NeAdminShell({
   logoutAction: () => Promise<void>;
 }) {
   const pathname = usePathname();
+  const managedCollections = collections.filter((collection) => collection.mode !== "incoming");
+  const incomingCollections = collections.filter((collection) => collection.mode === "incoming");
 
   return (
     <div style={s.root}>
       <aside style={s.aside}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <a href="/" style={s.visitBtn}>Visit Site</a>
-          <NavItem href="/admin" active={pathname === "/admin"}>Dashboard</NavItem>
-          <NavItem href="/admin/pages" active={pathname === "/admin/pages"}>Pages</NavItem>
-          {collections.map((collection) => (
-            <NavItem
-              key={collection.id}
-              href={`/admin/collections/${collection.id}`}
-              active={pathname.startsWith(`/admin/collections/${collection.id}`)}
-            >
-              {collection.label}
-            </NavItem>
-          ))}
-          {isAdmin && (
-            <NavItem href="/admin/users" active={pathname.startsWith("/admin/users")}>
-              Users
-            </NavItem>
-          )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <a href="/" style={s.visitBtn}>
+            <span style={{ display: "inline-flex", color: "var(--ne-fg)" }}>
+              <HomeIcon size={18} />
+            </span>
+            <span>Visit Site</span>
+          </a>
+
+          <NavGroup title="Workspace">
+            <NavItem href="/admin" active={pathname === "/admin"} icon={<DashboardIcon size={18} />}>Dashboard</NavItem>
+            <NavItem href="/admin/pages" active={pathname === "/admin/pages"} icon={<PageIcon size={18} />}>Pages</NavItem>
+          </NavGroup>
+
+          {managedCollections.length > 0 ? (
+            <NavGroup title="Collections">
+              {managedCollections.map((collection) => (
+                <NavItem
+                  key={collection.id}
+                  href={`/admin/collections/${collection.id}`}
+                  active={pathname.startsWith(`/admin/collections/${collection.id}`)}
+                  icon={<CollectionIcon size={18} />}
+                >
+                  {collection.label}
+                </NavItem>
+              ))}
+            </NavGroup>
+          ) : null}
+
+          {incomingCollections.length > 0 ? (
+            <NavGroup title="Incoming">
+              {incomingCollections.map((collection) => (
+                <NavItem
+                  key={collection.id}
+                  href={`/admin/collections/${collection.id}`}
+                  active={pathname.startsWith(`/admin/collections/${collection.id}`)}
+                  icon={<IncomingIcon size={18} />}
+                >
+                  {collection.label}
+                </NavItem>
+              ))}
+            </NavGroup>
+          ) : null}
+
+          {isAdmin ? (
+            <NavGroup title="Admin">
+              <NavItem href="/admin/users" active={pathname.startsWith("/admin/users")} icon={<UsersIcon size={18} />}>
+                Users
+              </NavItem>
+            </NavGroup>
+          ) : null}
         </div>
-        <NavItem href="/admin/settings" active={pathname === "/admin/settings"}>
-          Settings
-        </NavItem>
+        <NavGroup title="Preferences">
+          <NavItem href="/admin/settings" active={pathname === "/admin/settings"} icon={<SettingsIcon size={18} />}>
+            Settings
+          </NavItem>
+        </NavGroup>
       </aside>
 
       <div style={{ minWidth: 0 }}>
@@ -113,9 +164,19 @@ export function NeAdminShell({
             <span style={{ color: "var(--ne-fg)", fontWeight: 600 }}>{user.name}</span>
           </p>
           <div style={s.navActions}>
-            <a href="/admin/account" style={s.navBtn}>Account</a>
+            <a href="/admin/account" style={s.navBtn}>
+              <span style={{ display: "inline-flex", color: "var(--ne-fg)" }}>
+                <PersonIcon size={18} />
+              </span>
+              <span>Account</span>
+            </a>
             <form action={logoutAction}>
-              <button type="submit" style={s.navBtn}>Logout</button>
+              <button type="submit" style={s.navBtn}>
+                <span style={{ display: "inline-flex", color: "var(--ne-fg)" }}>
+                  <LogoutIcon size={18} />
+                </span>
+                <span>Logout</span>
+              </button>
             </form>
           </div>
         </header>
@@ -129,10 +190,12 @@ function NavItem({
   active,
   children,
   href,
+  icon,
 }: {
   active: boolean;
   children: ReactNode;
   href: string;
+  icon?: ReactNode;
 }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -141,7 +204,9 @@ function NavItem({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: "block",
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
         borderRadius: 10,
         padding: "9px 12px",
         fontSize: 15,
@@ -153,7 +218,44 @@ function NavItem({
         transition: "background 120ms, color 120ms",
       }}
     >
-      {children}
+      {icon ? (
+        <span
+          style={{
+            display: "inline-flex",
+            color: active ? "var(--ne-fg)" : hovered ? "var(--ne-fg)" : "var(--ne-muted)",
+          }}
+        >
+          {icon}
+        </span>
+      ) : null}
+      <span>{children}</span>
     </a>
+  );
+}
+
+function NavGroup({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div style={{ borderTop: "1px solid var(--ne-border-strong)", paddingTop: 12 }}>
+      <p
+        style={{
+          margin: "0 0 8px",
+          padding: "0 12px",
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "var(--ne-muted)",
+        }}
+      >
+        {title}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{children}</div>
+    </div>
   );
 }
