@@ -102,12 +102,12 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@37signals/lexxy": "^0.9.0-beta",
+    "@37signals/lexxy": "^0.9.8-beta",
     "@aws-sdk/client-s3": "^3.1012.0",
-    "@material-symbols-svg/react": "^0.4.1",
+    "@material-symbols-svg/react": "^0.5.0",
     "@rails/activestorage": "^8.1.200",
     "bcryptjs": "^3.0.3",
-    "next-auth": "^5.0.0-beta.30",
+    "next-auth": "^5.0.0-beta.31",
     "pg": "^8.20.0"
   },
   "peerDependencies": {
@@ -118,10 +118,10 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/pg": "^8.20.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "next": "^16.2.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "next": "^16.2.4",
     "tsup": "^8.4.0",
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.2"
   }
 }
