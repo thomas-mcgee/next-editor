@@ -1,5 +1,11 @@
 # @makeablebrand/next-editor
 
+## 0.1.8
+
+### Patch Changes
+
+- Refresh package dependencies and add a sample demo env file for local setup.
+
 ## 0.1.7
 
 ### Patch Changes

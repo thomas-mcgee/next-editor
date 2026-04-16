@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     "ignoreDeprecations": "6.0",
     "skipLibCheck": true,
+    "types": ["node"],
     "lib": ["ES2020", "DOM"]
   },
   "include": ["src/**/*"]
